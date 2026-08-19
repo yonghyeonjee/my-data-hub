@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>통합 매출 & CRM 관리자 포털</title>
+  <title>통합 매출 & 대민 CRM 관리자 CMS</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -18,7 +18,7 @@
     .login-card button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
     #appLayout { display: flex; width: 100vw; height: 100vh; }
-    aside { width: 250px; background: #0f172a; color: #94a3b8; display: flex; flex-direction: column; flex-shrink: 0; }
+    aside { width: 260px; background: #0f172a; color: #94a3b8; display: flex; flex-direction: column; flex-shrink: 0; }
     .brand-logo { padding: 22px 20px; font-size: 16px; font-weight: 700; color: #ffffff; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 8px; }
     .nav-menu { list-style: none; padding: 16px 8px; flex: 1; overflow-y: auto; }
     .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13.5px; font-weight: 500; }
@@ -54,6 +54,9 @@
     .ch-온라인 { background: #f0fdf4; color: #16a34a; }
     .ch-VMS { background: #fef3c7; color: #d97706; }
     .ch-렌탈 { background: #f3e8ff; color: #9333ea; }
+    .tag-mkt { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .tag-yes { background: #ecfdf5; color: #059669; }
+    .tag-no { background: #f1f5f9; color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -67,7 +70,7 @@
       <input type="password" id="loginPassword" placeholder="••••••••">
       <button onclick="login()">로그인</button>
       <div style="text-align: center; margin-top: 16px;">
-        <a href="index.html" style="font-size: 13px; color: #64748b; text-decoration: none;">현장/담당자 포털 ➔</a>
+        <a href="index.html" target="_blank" style="font-size: 13px; color: #64748b; text-decoration: none;">대민 설문 폼 열기 ↗</a>
       </div>
     </div>
   </div>
@@ -78,6 +81,7 @@
       <ul class="nav-menu">
         <li class="nav-item active" onclick="switchTab('tab-dash', this)">📊 4대 채널 매출 현황</li>
         <li class="nav-item" onclick="switchTab('tab-orders', this)">📋 통합 주문·매출 원장</li>
+        <li class="nav-item" onclick="switchTab('tab-submissions', this)">📝 대민 고객 설문·리뷰 접수</li>
         <li class="nav-item" onclick="switchTab('tab-excel', this)">📥 엑셀 대량 업로드 (DPS/ERP)</li>
         <li class="nav-item" onclick="switchTab('tab-crm', this)">🎯 CRM 재구매 타겟팅</li>
         <li class="nav-item" onclick="switchTab('tab-gas', this)">📈 온라인 매출 상세 뷰어</li>
@@ -97,14 +101,13 @@
       <header>
         <h2 id="pageTitle" style="font-size: 17px; font-weight: 700;">📊 4대 채널 매출 현황</h2>
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-secondary" onclick="exportToExcel()">엑셀 다운로드 ⬇</button>
-          <a href="index.html" target="_blank" class="btn btn-secondary" style="text-decoration: none;">현장 입력기 ↗</a>
+          <a href="index.html" target="_blank" class="btn btn-secondary" style="text-decoration: none;">대민 고객 설문 페이지 ↗</a>
         </div>
       </header>
 
       <div class="content-body">
         
-        <!-- 탭 1: 4대 채널 실시간 KPI 대시보드 -->
+        <!-- 탭 1: 매출 KPI 현황 -->
         <section id="tab-dash" class="tab-content">
           <div class="kpi-grid">
             <div class="kpi-card">
@@ -135,17 +138,11 @@
           </div>
 
           <div class="card">
-            <h3>최근 주요 거래 내역 (최신 10건)</h3>
+            <h3>최근 주요 거래 내역</h3>
             <table>
               <thead>
                 <tr>
-                  <th>구분</th>
-                  <th>주문일</th>
-                  <th>고객명</th>
-                  <th>구매 상품</th>
-                  <th style="text-align: right;">순매출</th>
-                  <th>다음 구매 예정 상품</th>
-                  <th>담당자</th>
+                  <th>구분</th><th>주문일</th><th>고객명</th><th>구매 상품</th><th style="text-align: right;">순매출</th><th>다음 구매 예정 상품</th><th>담당자</th>
                 </tr>
               </thead>
               <tbody id="dashRecentBody"></tbody>
@@ -153,35 +150,13 @@
           </div>
         </section>
 
-        <!-- 탭 2: 통합 주문/매출 원장 관리 -->
+        <!-- 탭 2: 주문/매출 원장 -->
         <section id="tab-orders" class="tab-content hidden">
-          <div class="card">
-            <h3>➕ 신규 주문 건 등록</h3>
-            <div class="form-grid">
-              <select id="newCh">
-                <option value="매장">매장 (DPS)</option>
-                <option value="온라인">온라인 (샵링커)</option>
-                <option value="VMS">VMS (이카운트)</option>
-                <option value="렌탈">렌탈 (이카운트)</option>
-              </select>
-              <input type="date" id="newDate">
-              <input type="text" id="newCust" placeholder="고객명 (김민준, (주)회사)">
-              <input type="text" id="newPhone" placeholder="전화번호 (010-0000-0000)">
-              <input type="text" id="newProd" placeholder="구매 상품명">
-              <input type="number" id="newSales" placeholder="매출 금액 (원)">
-              <input type="number" id="newRefund" placeholder="환불 금액 (0)" value="0">
-              <input type="text" id="nextProd" placeholder="다음 구매 예정 상품">
-              <input type="text" id="newHandler" placeholder="담당자">
-            </div>
-            <input type="text" id="newNotes" placeholder="비고 (결제방식, 샵링커번호 등)" style="margin-bottom: 12px;">
-            <button class="btn btn-primary" onclick="createSingleOrder()">원장에 저장</button>
-          </div>
-
           <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
               <h3>📋 4대 채널 통합 매출 원장</h3>
               <div style="display: flex; gap: 8px;">
-                <select id="filterCh" onchange="filterOrders()" style="width: 140px;">
+                <select id="filterCh" onchange="filterOrders()" style="width: 130px;">
                   <option value="ALL">전체 구분</option>
                   <option value="매장">매장</option>
                   <option value="온라인">온라인</option>
@@ -189,23 +164,16 @@
                   <option value="렌탈">렌탈</option>
                 </select>
                 <input type="text" id="searchKeyword" placeholder="고객명/전화번호/상품 검색..." oninput="filterOrders()" style="width: 220px;">
+                <button class="btn btn-secondary" onclick="exportOrdersExcel()">엑셀 다운로드</button>
               </div>
             </div>
 
             <table>
               <thead>
                 <tr>
-                  <th>구분</th>
-                  <th>주문일</th>
-                  <th>고객명</th>
-                  <th>전화번호</th>
-                  <th>구매 상품</th>
-                  <th style="text-align: right;">매출</th>
-                  <th style="text-align: right;">환불</th>
-                  <th style="text-align: right;">순매출</th>
-                  <th>다음 구매 예정 상품</th>
-                  <th>담당자</th>
-                  <th>관리</th>
+                  <th>구분</th><th>주문일</th><th>고객명</th><th>전화번호</th><th>구매 상품</th>
+                  <th style="text-align: right;">매출</th><th style="text-align: right;">환불</th><th style="text-align: right;">순매출</th>
+                  <th>다음 구매 예정 상품</th><th>담당자</th><th>관리</th>
                 </tr>
               </thead>
               <tbody id="ordersTableBody"></tbody>
@@ -213,91 +181,88 @@
           </div>
         </section>
 
-        <!-- 탭 3: 엑셀 대량 업로드 -->
+        <!-- 탭 3: 대민 고객 설문/리뷰 접수 현황 (NEW!) -->
+        <section id="tab-submissions" class="tab-content hidden">
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3>📝 대민 고객 만족도·리뷰 및 마케팅 동의 접수 내역</h3>
+              <button class="btn btn-secondary" onclick="exportSubmissionsExcel()">설문 내역 엑셀 다운로드</button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>접수일시</th>
+                  <th>고객명</th>
+                  <th>전화번호</th>
+                  <th>구매채널</th>
+                  <th>구매상품</th>
+                  <th>만족도</th>
+                  <th>리뷰상태</th>
+                  <th>리뷰링크/내용</th>
+                  <th>차기 관심상품</th>
+                  <th>마케팅동의</th>
+                </tr>
+              </thead>
+              <tbody id="submissionsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 탭 4: 엑셀 대량 업로드 (sales_orders 대상 완벽 수정) -->
         <section id="tab-excel" class="tab-content hidden">
           <div class="card">
             <h3>📥 DPS / 이카운트 / 샵링커 엑셀 일괄 업로드</h3>
             <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
-              * 엑셀 1행 헤더: <b>구분</b>, <b>주문일</b>, <b>고객명</b>, <b>전화번호</b>, <b>구매 상품</b>, <b>매출</b>, <b>환불</b>, <b>다음 구매 예정 상품</b>, <b>담당자</b>, <b>비고</b>
+              * 엑셀 컬럼: <b>구분</b>, <b>주문일</b>, <b>고객명</b>, <b>전화번호</b>, <b>구매 상품</b>, <b>매출</b>, <b>환불</b>, <b>다음 구매 예정 상품</b>, <b>담당자</b>, <b>비고</b>
             </p>
             <input type="file" id="excelOrderFile" accept=".xlsx, .xls, .csv" style="margin-bottom: 16px;">
             <button class="btn btn-primary" onclick="uploadOrdersExcel()">엑셀 데이터 DB 일괄 적재 실행</button>
           </div>
         </section>
 
-        <!-- 탭 4: CRM 재구매 타겟팅 -->
+        <!-- 탭 5: CRM 재구매 타겟팅 -->
         <section id="tab-crm" class="tab-content hidden">
           <div class="card">
             <h3>🎯 다음 구매 예정 상품별 고객 타겟팅 리스트</h3>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">
-              고객 구매 주기 및 차기 관심 상품을 기반으로 한 재구매 권유 대상 명단입니다.
-            </p>
             <table>
               <thead>
-                <tr>
-                  <th>구분</th>
-                  <th>고객명</th>
-                  <th>전화번호</th>
-                  <th>최근 구매 상품</th>
-                  <th style="color: #2563eb;">다음 구매 예정 상품</th>
-                  <th>담당자</th>
-                </tr>
+                <tr><th>구분</th><th>고객명</th><th>전화번호</th><th>최근 구매 상품</th><th>다음 구매 예정 상품</th><th>담당자</th></tr>
               </thead>
               <tbody id="crmTableBody"></tbody>
             </table>
           </div>
         </section>
 
-        <!-- 탭 5: GAS 대시보드 임베드 -->
+        <!-- 탭 6: GAS 뷰어 -->
         <section id="tab-gas" class="tab-content hidden" style="height: calc(100vh - 120px);">
-          <iframe 
-            src="https://script.google.com/macros/s/AKfycby2qM0GXf08SmQ46sRUEJEXV6LfS9_jppw8V68of8kElHMWCoHv-VzfLYVAAavv1AL4/exec"
-            style="width: 100%; height: 100%; border: none; border-radius: 8px;">
-          </iframe>
+          <iframe src="https://script.google.com/macros/s/AKfycby2qM0GXf08SmQ46sRUEJEXV6LfS9_jppw8V68of8kElHMWCoHv-VzfLYVAAavv1AL4/exec" style="width: 100%; height: 100%; border: none; border-radius: 8px;"></iframe>
         </section>
 
-        <!-- 탭 6: API Key -->
+        <!-- 탭 7: API Key -->
         <section id="tab-keys" class="tab-content hidden">
           <div class="card">
-            <h3>🔑 시스템 연동용 API Key 발급</h3>
-            <div class="form-grid">
-              <input type="text" id="keyName" placeholder="식별 이름 (예: 샵링커 Webhook, 이카운트 연동)">
-            </div>
+            <h3>🔑 API Key 관리</h3>
+            <div class="form-grid"><input type="text" id="keyName" placeholder="식별 이름 (예: 샵링커 Webhook)"></div>
             <button class="btn btn-primary" onclick="generateApiKey()">API Key 생성</button>
           </div>
           <div class="card">
-            <h3>발급된 API Key</h3>
-            <table>
-              <thead>
-                <tr><th>식별명</th><th>API Key</th><th>생성일</th><th>관리</th></tr>
-              </thead>
-              <tbody id="keysTableBody"></tbody>
-            </table>
+            <table><thead><tr><th>식별명</th><th>API Key</th><th>생성일</th><th>관리</th></tr></thead><tbody id="keysTableBody"></tbody></table>
           </div>
         </section>
 
-        <!-- 탭 7: 권한 관리 -->
+        <!-- 탭 8: 권한 관리 -->
         <section id="tab-users" class="tab-content hidden">
           <div class="card">
-            <h3>👥 담당자 계정 즉시 등록</h3>
+            <h3>👥 담당자 계정 발급</h3>
             <div class="form-grid">
-              <input type="email" id="newMemberEmail" placeholder="담당자 이메일 (user@company.com)">
+              <input type="email" id="newMemberEmail" placeholder="이메일 (user@company.com)">
               <input type="password" id="newMemberPassword" placeholder="비밀번호 (6자 이상)">
-              <select id="newMemberRole">
-                <option value="user">일반 담당자 (현장 입력 & CRM 조회 권한)</option>
-                <option value="admin">마스터 관리자 (전사 CMS 총괄 권한)</option>
-              </select>
+              <select id="newMemberRole"><option value="user">일반 담당자</option><option value="admin">마스터 관리자</option></select>
             </div>
             <button class="btn btn-primary" onclick="createNewUserByAdmin()">계정 생성</button>
           </div>
           <div class="card">
-            <h3>등록된 사용자 목록</h3>
-            <table>
-              <thead>
-                <tr><th>이메일</th><th>권한</th><th>관리</th></tr>
-              </thead>
-              <tbody id="usersTableBody"></tbody>
-            </table>
+            <table><thead><tr><th>이메일</th><th>권한</th><th>관리</th></tr></thead><tbody id="usersTableBody"></tbody></table>
           </div>
         </section>
 
@@ -311,8 +276,8 @@
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let allOrders = [];
+    let allSubmissions = [];
 
-    // 인증 확인
     async function checkAdminAuth() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
@@ -321,17 +286,11 @@
         return;
       }
 
-      const { data: profile } = await supabaseClient.from('profiles').select('role').eq('id', session.user.id).single();
-      if (profile && profile.role !== 'admin') {
-        alert("관리자 권한이 없습니다. 현장 포털로 이동합니다.");
-        window.location.href = "index.html";
-        return;
-      }
-
       document.getElementById('loginOverlay').classList.add('hidden');
       document.getElementById('appLayout').classList.remove('hidden');
       document.getElementById('currentAdminEmail').innerText = session.user.email;
       loadAllOrders();
+      loadSubmissions();
       loadApiKeys();
       loadUsers();
     }
@@ -357,7 +316,7 @@
       document.getElementById('pageTitle').innerText = el.innerText;
     }
 
-    // 주문 데이터 조회 & KPI 계산
+    // 1. 주문 원장 조회 & KPI
     async function loadAllOrders() {
       const { data, error } = await supabaseClient.from('sales_orders').select('*').order('order_date', { ascending: false });
       if (error) return console.error(error);
@@ -451,37 +410,13 @@
       renderOrdersTable(filtered);
     }
 
-    async function createSingleOrder() {
-      const payload = {
-        channel_type: document.getElementById('newCh').value,
-        order_date: document.getElementById('newDate').value || new Date().toISOString().split('T')[0],
-        customer_name: document.getElementById('newCust').value.trim(),
-        customer_phone: document.getElementById('newPhone').value.trim(),
-        product_name: document.getElementById('newProd').value.trim(),
-        sales_amount: Number(document.getElementById('newSales').value) || 0,
-        refund_amount: Number(document.getElementById('newRefund').value) || 0,
-        next_product: document.getElementById('nextProd').value.trim(),
-        handler: document.getElementById('newHandler').value.trim(),
-        notes: document.getElementById('newNotes').value.trim()
-      };
-
-      if (!payload.customer_name || !payload.product_name) return alert("고객명과 상품명을 입력하세요.");
-
-      const { error } = await supabaseClient.from('sales_orders').insert([payload]);
-      if (error) alert("등록 실패: " + error.message);
-      else {
-        alert("원장에 등록되었습니다.");
-        loadAllOrders();
-      }
-    }
-
     async function deleteOrder(id) {
       if (!confirm("해당 주문 내역을 삭제하시겠습니까?")) return;
       await supabaseClient.from('sales_orders').delete().eq('id', id);
       loadAllOrders();
     }
 
-    // 엑셀 일괄 업로드
+    // 2. 엑셀 대량 업로드 (sales_orders 전용 완벽 매핑)
     async function uploadOrdersExcel() {
       const fileInput = document.getElementById('excelOrderFile');
       if (!fileInput.files.length) return alert("엑셀 파일을 선택하세요.");
@@ -509,9 +444,11 @@
 
         if (!mapped.length) return alert("업로드할 유효한 데이터가 없습니다.");
 
+        // 정확히 sales_orders 테이블로 전달
         const { error } = await supabaseClient.from('sales_orders').insert(mapped);
-        if (error) alert("엑셀 업로드 실패: " + error.message);
-        else {
+        if (error) {
+          alert("엑셀 업로드 실패: " + error.message);
+        } else {
           alert(`총 ${mapped.length}건의 주문 데이터가 성공적으로 적재되었습니다.`);
           fileInput.value = '';
           loadAllOrders();
@@ -521,23 +458,47 @@
       reader.readAsArrayBuffer(file);
     }
 
-    function exportToExcel() {
+    // 3. 대민 설문 접수 내역 관리
+    async function loadSubmissions() {
+      const { data, error } = await supabaseClient.from('customer_submissions').select('*').order('created_at', { ascending: false });
+      if (error) return console.error(error);
+      allSubmissions = data || [];
+      
+      document.getElementById('submissionsTableBody').innerHTML = allSubmissions.map(s => `
+        <tr>
+          <td style="color:#64748b; font-size:12px;">${new Date(s.created_at).toLocaleString()}</td>
+          <td><b>${s.customer_name}</b></td>
+          <td style="font-family:monospace; color:#2563eb;">${s.customer_phone}</td>
+          <td><span class="badge-ch ch-${s.purchase_channel}">${s.purchase_channel}</span></td>
+          <td>${s.product_name || '-'}</td>
+          <td style="color:#f59e0b;">${'★'.repeat(s.rating || 5)}</td>
+          <td><span style="background:#eff6ff; color:#1d4ed8; padding:2px 6px; border-radius:4px; font-weight:600;">${s.review_status}</span></td>
+          <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.review_url || '-'}</td>
+          <td style="color:#059669; font-weight:600;">${s.next_interested_product || '-'}</td>
+          <td><span class="tag-mkt ${s.marketing_consent ? 'tag-yes' : 'tag-no'}">${s.marketing_consent ? '동의(Y)' : '미동의(N)'}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function exportOrdersExcel() {
       const ws = XLSX.utils.json_to_sheet(allOrders);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "매출원장");
-      XLSX.writeFile(wb, `sales_orders_export_${new Date().toISOString().slice(0,10)}.xlsx`);
+      XLSX.writeFile(wb, `매출원장_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
 
-    // API Key & User 함수들
+    function exportSubmissionsExcel() {
+      const ws = XLSX.utils.json_to_sheet(allSubmissions);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "고객설문_마케팅동의");
+      XLSX.writeFile(wb, `고객설문_마케팅동의_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    // API Key & User 함수
     async function loadApiKeys() {
       const { data } = await supabaseClient.from('api_keys').select('*').order('created_at', { ascending: false });
       document.getElementById('keysTableBody').innerHTML = (data || []).map(k => `
-        <tr>
-          <td><b>${k.name}</b></td>
-          <td><code>${k.api_key}</code></td>
-          <td>${new Date(k.created_at).toLocaleDateString()}</td>
-          <td><button class="btn-danger" onclick="deleteApiKey(${k.id})">삭제</button></td>
-        </tr>
+        <tr><td><b>${k.name}</b></td><td><code>${k.api_key}</code></td><td>${new Date(k.created_at).toLocaleDateString()}</td><td><button class="btn-danger" onclick="deleteApiKey(${k.id})">삭제</button></td></tr>
       `).join('');
     }
 
@@ -562,18 +523,9 @@
         <tr>
           <td><b>${u.email}</b></td>
           <td><span style="font-weight:700; color:${u.role==='admin'?'#dc2626':'#16a34a'}">${u.role.toUpperCase()}</span></td>
-          <td>
-            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="toggleRole('${u.id}', '${u.role}')">권한변경</button>
-            <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteUser('${u.id}')">삭제</button>
-          </td>
+          <td><button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteUser('${u.id}')">삭제</button></td>
         </tr>
       `).join('');
-    }
-
-    async function toggleRole(id, curRole) {
-      const nextRole = curRole === 'admin' ? 'user' : 'admin';
-      await supabaseClient.from('profiles').update({ role: nextRole }).eq('id', id);
-      loadUsers();
     }
 
     async function deleteUser(id) {
@@ -587,12 +539,7 @@
       const password = document.getElementById('newMemberPassword').value;
       const role = document.getElementById('newMemberRole').value;
 
-      const { data, error } = await supabaseClient.rpc('create_user_by_admin', {
-        new_email: email,
-        new_password: password,
-        new_role: role
-      });
-
+      const { data, error } = await supabaseClient.rpc('create_user_by_admin', { new_email: email, new_password: password, new_role: role });
       if (error || (data && !data.success)) alert("생성 실패: " + (error ? error.message : data.error));
       else {
         alert("계정이 등록되었습니다.");
