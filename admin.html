@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>통합 Admin CMS · 데이터 & 매출 관리 시스템</title>
-  <!-- Supabase JS & SheetJS -->
+  <title>통합 매출 & CRM 관리자 포털</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -13,55 +12,52 @@
     body { background-color: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
     .hidden { display: none !important; }
 
-    /* 로그인 화면 */
     #loginOverlay { position: fixed; inset: 0; background: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 999; }
     .login-card { background: white; padding: 36px; border-radius: 12px; width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .login-card input { width: 100%; padding: 12px; margin: 8px 0 16px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
     .login-card button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
-    /* 전체 CMS 레이아웃 */
     #appLayout { display: flex; width: 100vw; height: 100vh; }
-    
-    /* 좌측 사이드바 */
-    aside { width: 260px; background: #0f172a; color: #94a3b8; display: flex; flex-direction: column; flex-shrink: 0; }
-    .brand-logo { padding: 22px 20px; font-size: 17px; font-weight: 700; color: #ffffff; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 8px; }
+    aside { width: 250px; background: #0f172a; color: #94a3b8; display: flex; flex-direction: column; flex-shrink: 0; }
+    .brand-logo { padding: 22px 20px; font-size: 16px; font-weight: 700; color: #ffffff; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 8px; }
     .nav-menu { list-style: none; padding: 16px 8px; flex: 1; overflow-y: auto; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13.5px; font-weight: 500; }
     .nav-item:hover { background: #1e293b; color: #f8fafc; }
     .nav-item.active { background: #2563eb; color: white; }
     .user-profile-bar { padding: 16px 20px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
     .btn-logout { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
 
-    /* 우측 메인 영역 */
     main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: #f8fafc; }
     header { background: white; padding: 16px 32px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-    .content-body { padding: 28px 32px; max-width: 1300px; }
+    .content-body { padding: 28px 32px; max-width: 1400px; }
 
-    /* 대시보드 탭 전용 풀사이즈 컨테이너 */
-    #tab-sales-dash { width: 100%; height: calc(100vh - 65px); padding: 0; }
-    .dash-iframe { width: 100%; height: 100%; border: none; display: block; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .kpi-title { font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
+    .kpi-value { font-size: 22px; font-weight: 800; color: #0f172a; }
+    .kpi-sub { font-size: 11.5px; color: #94a3b8; margin-top: 4px; }
 
-    /* 일반 카드/폼 UI */
-    .card { background: white; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-    .card h3 { margin-bottom: 16px; font-size: 16px; color: #0f172a; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; }
-    input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
-    .btn { padding: 10px 18px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+    .card { background: white; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+    .card h3 { margin-bottom: 16px; font-size: 15px; color: #0f172a; font-weight: 700; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    input, select, textarea { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; }
+    .btn { padding: 9px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; }
     .btn-primary { background: #2563eb; color: white; }
-    .btn-danger { background: #ef4444; color: white; padding: 6px 12px; font-size: 12px; }
+    .btn-danger { background: #ef4444; color: white; padding: 5px 10px; font-size: 12px; }
     .btn-secondary { background: #e2e8f0; color: #334155; }
     
     table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-    th { background: #f8fafc; color: #64748b; font-weight: 600; }
-    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-    .badge-admin { background: #fef2f2; color: #dc2626; }
-    .badge-user { background: #f0fdf4; color: #16a34a; }
+    th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+    th { background: #f8fafc; color: #64748b; font-weight: 600; white-space: nowrap; }
+    .badge-ch { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; display: inline-block; }
+    .ch-매장 { background: #eff6ff; color: #2563eb; }
+    .ch-온라인 { background: #f0fdf4; color: #16a34a; }
+    .ch-VMS { background: #fef3c7; color: #d97706; }
+    .ch-렌탈 { background: #f3e8ff; color: #9333ea; }
   </style>
 </head>
 <body>
 
-  <!-- 관리자 로그인 폼 -->
   <div id="loginOverlay">
     <div class="login-card">
       <h2 style="margin-bottom: 20px; text-align: center; color: #0f172a;">🔐 CMS 관리자 포털</h2>
@@ -71,156 +67,252 @@
       <input type="password" id="loginPassword" placeholder="••••••••">
       <button onclick="login()">로그인</button>
       <div style="text-align: center; margin-top: 16px;">
-        <a href="index.html" style="font-size: 13px; color: #64748b; text-decoration: none;">대민 포털로 이동 ➔</a>
+        <a href="index.html" style="font-size: 13px; color: #64748b; text-decoration: none;">현장/담당자 포털 ➔</a>
       </div>
     </div>
   </div>
 
-  <!-- 메인 레이아웃 -->
   <div id="appLayout" class="hidden">
-    <!-- 좌측 메뉴 -->
     <aside>
-      <div class="brand-logo">⚡ CORE ADMIN CMS</div>
+      <div class="brand-logo">⚡ CORE SALES CMS</div>
       <ul class="nav-menu">
-        <li class="nav-item active" onclick="switchTab('tab-sales-dash', this)">📈 온라인 매출 대시보드</li>
-        <li class="nav-item" onclick="switchTab('tab-data', this)">📦 데이터 항목 관리</li>
-        <li class="nav-item" onclick="switchTab('tab-excel', this)">📊 엑셀 대량 업로드</li>
+        <li class="nav-item active" onclick="switchTab('tab-dash', this)">📊 4대 채널 매출 현황</li>
+        <li class="nav-item" onclick="switchTab('tab-orders', this)">📋 통합 주문·매출 원장</li>
+        <li class="nav-item" onclick="switchTab('tab-excel', this)">📥 엑셀 대량 업로드 (DPS/ERP)</li>
+        <li class="nav-item" onclick="switchTab('tab-crm', this)">🎯 CRM 재구매 타겟팅</li>
+        <li class="nav-item" onclick="switchTab('tab-gas', this)">📈 온라인 매출 상세 뷰어</li>
         <li class="nav-item" onclick="switchTab('tab-keys', this)">🔑 API Key 관리</li>
-        <li class="nav-item" onclick="switchTab('tab-users', this)">👥 사용자 및 권한 관리</li>
+        <li class="nav-item" onclick="switchTab('tab-users', this)">👥 담당자 및 권한 관리</li>
       </ul>
       <div class="user-profile-bar">
         <div>
           <div id="currentAdminEmail" style="font-weight: 600; color: white;">admin</div>
-          <span class="badge badge-admin">Master Admin</span>
+          <span style="font-size: 11px; color: #38bdf8;">Master Admin</span>
         </div>
         <button class="btn-logout" onclick="logout()">로그아웃</button>
       </div>
     </aside>
 
-    <!-- 우측 화면 -->
     <main>
       <header>
-        <h2 id="pageTitle" style="font-size: 17px; font-weight: 700;">📈 온라인 매출 대시보드</h2>
+        <h2 id="pageTitle" style="font-size: 17px; font-weight: 700;">📊 4대 채널 매출 현황</h2>
         <div style="display: flex; gap: 8px;">
-          <a id="extDashBtn" href="https://script.google.com/macros/s/AKfycby2qM0GXf08SmQ46sRUEJEXV6LfS9_jppw8V68of8kElHMWCoHv-VzfLYVAAavv1AL4/exec" target="_blank" class="btn btn-secondary" style="text-decoration: none; font-size: 13px;">새 창으로 열기 ↗</a>
-          <a href="index.html" target="_blank" class="btn btn-secondary" style="text-decoration: none; font-size: 13px;">대민 사이트 ↗</a>
+          <button class="btn btn-secondary" onclick="exportToExcel()">엑셀 다운로드 ⬇</button>
+          <a href="index.html" target="_blank" class="btn btn-secondary" style="text-decoration: none;">현장 입력기 ↗</a>
         </div>
       </header>
 
-      <!-- 1. Google Apps Script 대시보드 탭 (Iframe) -->
-      <section id="tab-sales-dash" class="tab-content" style="height: calc(100vh - 65px);">
-        <iframe 
-          class="dash-iframe" 
-          src="https://script.google.com/macros/s/AKfycby2qM0GXf08SmQ46sRUEJEXV6LfS9_jppw8V68of8kElHMWCoHv-VzfLYVAAavv1AL4/exec"
-          title="온라인 매출 대시보드"
-          allow="clipboard-write">
-        </iframe>
-      </section>
-
-      <!-- 2. 데이터 CRUD 탭 -->
-      <section id="tab-data" class="tab-content hidden content-body">
-        <div class="card">
-          <h3>➕ 신규 데이터 개별 등록</h3>
-          <div class="form-grid">
-            <input type="text" id="inputCat" placeholder="카테고리 (예: 인프라, 채널, 광고비)">
-            <input type="text" id="inputTitle" placeholder="제목">
+      <div class="content-body">
+        
+        <!-- 탭 1: 4대 채널 실시간 KPI 대시보드 -->
+        <section id="tab-dash" class="tab-content">
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-title">총 순매출 (전체 채널)</div>
+              <div class="kpi-value" id="kpiTotalNet">0원</div>
+              <div class="kpi-sub" id="kpiTotalGross">총매출 0원 · 환불 0원</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">🏪 매장 (DPS 결제)</div>
+              <div class="kpi-value" id="kpiStoreNet" style="color: #2563eb;">0원</div>
+              <div class="kpi-sub" id="kpiStoreCnt">주문 0건</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">🌐 온라인 (샵링커/몰)</div>
+              <div class="kpi-value" id="kpiOnlineNet" style="color: #16a34a;">0원</div>
+              <div class="kpi-sub" id="kpiOnlineCnt">주문 0건</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">🏢 VMS / B2B (이카운트)</div>
+              <div class="kpi-value" id="kpiVmsNet" style="color: #d97706;">0원</div>
+              <div class="kpi-sub" id="kpiVmsCnt">계약 0건</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-title">📦 렌탈 (이카운트 약정)</div>
+              <div class="kpi-value" id="kpiRentalNet" style="color: #9333ea;">0원</div>
+              <div class="kpi-sub" id="kpiRentalCnt">약정 0건</div>
+            </div>
           </div>
-          <textarea id="inputContent" rows="3" placeholder="상세 설명을 입력하세요..." style="margin-bottom: 12px;"></textarea>
-          <button class="btn btn-primary" onclick="createSingleItem()">데이터 저장</button>
-        </div>
 
-        <div class="card">
-          <h3>📋 등록된 데이터베이스 목록</h3>
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 15%;">카테고리</th>
-                <th style="width: 35%;">제목</th>
-                <th style="width: 35%;">등록일</th>
-                <th style="width: 15%;">관리</th>
-              </tr>
-            </thead>
-            <tbody id="dataTableBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 3. 엑셀 업로드 탭 -->
-      <section id="tab-excel" class="tab-content hidden content-body">
-        <div class="card">
-          <h3>📥 엑셀 파일 대량 일괄 등록 (.xlsx, .csv)</h3>
-          <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
-            * 엑셀 1행 헤더를 <b>category</b>, <b>title</b>, <b>content</b> 로 맞추어 업로드하면 일괄 Insert 됩니다.
-          </p>
-          <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="margin-bottom: 16px;">
-          <button class="btn btn-primary" onclick="processExcelUpload()">엑셀 데이터 DB 업로드 실행</button>
-        </div>
-      </section>
-
-      <!-- 4. API Key 관리 탭 -->
-      <section id="tab-keys" class="tab-content hidden content-body">
-        <div class="card">
-          <h3>🔑 시스템 연동용 API Key 생성</h3>
-          <div class="form-grid">
-            <input type="text" id="keyName" placeholder="Key 식별 이름 (예: 모바일 앱 연동용, 백오피스 API)">
+          <div class="card">
+            <h3>최근 주요 거래 내역 (최신 10건)</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th>주문일</th>
+                  <th>고객명</th>
+                  <th>구매 상품</th>
+                  <th style="text-align: right;">순매출</th>
+                  <th>다음 구매 예정 상품</th>
+                  <th>담당자</th>
+                </tr>
+              </thead>
+              <tbody id="dashRecentBody"></tbody>
+            </table>
           </div>
-          <button class="btn btn-primary" onclick="generateApiKey()">신규 API Key 발급</button>
-        </div>
-        <div class="card">
-          <h3>발급된 API Key 목록</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>식별명</th>
-                <th>API Key 값</th>
-                <th>발급일자</th>
-                <th>관리</th>
-              </tr>
-            </thead>
-            <tbody id="keysTableBody"></tbody>
-          </table>
-        </div>
-      </section>
+        </section>
 
-      <!-- 5. 권한 관리 탭 -->
-      <section id="tab-users" class="tab-content hidden content-body">
-        <div class="card">
-          <h3>👥 사용자 계정 등록 (대민 로그인 허용용)</h3>
-          <div class="form-grid">
-            <input type="email" id="newMemberEmail" placeholder="사용자 이메일">
-            <input type="password" id="newMemberPassword" placeholder="초기 비밀번호">
-            <select id="newMemberRole">
-              <option value="user">일반 사용자 (대민 사이트 조회 권한)</option>
-              <option value="admin">관리자 (CMS 전체 접근 권한)</option>
-            </select>
+        <!-- 탭 2: 통합 주문/매출 원장 관리 -->
+        <section id="tab-orders" class="tab-content hidden">
+          <div class="card">
+            <h3>➕ 신규 주문 건 등록</h3>
+            <div class="form-grid">
+              <select id="newCh">
+                <option value="매장">매장 (DPS)</option>
+                <option value="온라인">온라인 (샵링커)</option>
+                <option value="VMS">VMS (이카운트)</option>
+                <option value="렌탈">렌탈 (이카운트)</option>
+              </select>
+              <input type="date" id="newDate">
+              <input type="text" id="newCust" placeholder="고객명 (김민준, (주)회사)">
+              <input type="text" id="newPhone" placeholder="전화번호 (010-0000-0000)">
+              <input type="text" id="newProd" placeholder="구매 상품명">
+              <input type="number" id="newSales" placeholder="매출 금액 (원)">
+              <input type="number" id="newRefund" placeholder="환불 금액 (0)" value="0">
+              <input type="text" id="nextProd" placeholder="다음 구매 예정 상품">
+              <input type="text" id="newHandler" placeholder="담당자">
+            </div>
+            <input type="text" id="newNotes" placeholder="비고 (결제방식, 샵링커번호 등)" style="margin-bottom: 12px;">
+            <button class="btn btn-primary" onclick="createSingleOrder()">원장에 저장</button>
           </div>
-          <button class="btn btn-primary" onclick="createNewUserByAdmin()">계정 즉시 생성</button>
-        </div>
-        <div class="card">
-          <h3>전체 등록 계정 및 권한 목록</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>이메일</th>
-                <th>현재 권한</th>
-                <th>권한 변경</th>
-              </tr>
-            </thead>
-            <tbody id="usersTableBody"></tbody>
-          </table>
-        </div>
-      </section>
 
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h3>📋 4대 채널 통합 매출 원장</h3>
+              <div style="display: flex; gap: 8px;">
+                <select id="filterCh" onchange="filterOrders()" style="width: 140px;">
+                  <option value="ALL">전체 구분</option>
+                  <option value="매장">매장</option>
+                  <option value="온라인">온라인</option>
+                  <option value="VMS">VMS</option>
+                  <option value="렌탈">렌탈</option>
+                </select>
+                <input type="text" id="searchKeyword" placeholder="고객명/전화번호/상품 검색..." oninput="filterOrders()" style="width: 220px;">
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th>주문일</th>
+                  <th>고객명</th>
+                  <th>전화번호</th>
+                  <th>구매 상품</th>
+                  <th style="text-align: right;">매출</th>
+                  <th style="text-align: right;">환불</th>
+                  <th style="text-align: right;">순매출</th>
+                  <th>다음 구매 예정 상품</th>
+                  <th>담당자</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 탭 3: 엑셀 대량 업로드 -->
+        <section id="tab-excel" class="tab-content hidden">
+          <div class="card">
+            <h3>📥 DPS / 이카운트 / 샵링커 엑셀 일괄 업로드</h3>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+              * 엑셀 1행 헤더: <b>구분</b>, <b>주문일</b>, <b>고객명</b>, <b>전화번호</b>, <b>구매 상품</b>, <b>매출</b>, <b>환불</b>, <b>다음 구매 예정 상품</b>, <b>담당자</b>, <b>비고</b>
+            </p>
+            <input type="file" id="excelOrderFile" accept=".xlsx, .xls, .csv" style="margin-bottom: 16px;">
+            <button class="btn btn-primary" onclick="uploadOrdersExcel()">엑셀 데이터 DB 일괄 적재 실행</button>
+          </div>
+        </section>
+
+        <!-- 탭 4: CRM 재구매 타겟팅 -->
+        <section id="tab-crm" class="tab-content hidden">
+          <div class="card">
+            <h3>🎯 다음 구매 예정 상품별 고객 타겟팅 리스트</h3>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">
+              고객 구매 주기 및 차기 관심 상품을 기반으로 한 재구매 권유 대상 명단입니다.
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th>고객명</th>
+                  <th>전화번호</th>
+                  <th>최근 구매 상품</th>
+                  <th style="color: #2563eb;">다음 구매 예정 상품</th>
+                  <th>담당자</th>
+                </tr>
+              </thead>
+              <tbody id="crmTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 탭 5: GAS 대시보드 임베드 -->
+        <section id="tab-gas" class="tab-content hidden" style="height: calc(100vh - 120px);">
+          <iframe 
+            src="https://script.google.com/macros/s/AKfycby2qM0GXf08SmQ46sRUEJEXV6LfS9_jppw8V68of8kElHMWCoHv-VzfLYVAAavv1AL4/exec"
+            style="width: 100%; height: 100%; border: none; border-radius: 8px;">
+          </iframe>
+        </section>
+
+        <!-- 탭 6: API Key -->
+        <section id="tab-keys" class="tab-content hidden">
+          <div class="card">
+            <h3>🔑 시스템 연동용 API Key 발급</h3>
+            <div class="form-grid">
+              <input type="text" id="keyName" placeholder="식별 이름 (예: 샵링커 Webhook, 이카운트 연동)">
+            </div>
+            <button class="btn btn-primary" onclick="generateApiKey()">API Key 생성</button>
+          </div>
+          <div class="card">
+            <h3>발급된 API Key</h3>
+            <table>
+              <thead>
+                <tr><th>식별명</th><th>API Key</th><th>생성일</th><th>관리</th></tr>
+              </thead>
+              <tbody id="keysTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 탭 7: 권한 관리 -->
+        <section id="tab-users" class="tab-content hidden">
+          <div class="card">
+            <h3>👥 담당자 계정 즉시 등록</h3>
+            <div class="form-grid">
+              <input type="email" id="newMemberEmail" placeholder="담당자 이메일 (user@company.com)">
+              <input type="password" id="newMemberPassword" placeholder="비밀번호 (6자 이상)">
+              <select id="newMemberRole">
+                <option value="user">일반 담당자 (현장 입력 & CRM 조회 권한)</option>
+                <option value="admin">마스터 관리자 (전사 CMS 총괄 권한)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="createNewUserByAdmin()">계정 생성</button>
+          </div>
+          <div class="card">
+            <h3>등록된 사용자 목록</h3>
+            <table>
+              <thead>
+                <tr><th>이메일</th><th>권한</th><th>관리</th></tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
     </main>
   </div>
 
   <script>
-    // Supabase 클라이언트 초기화
     const SUPABASE_URL = "https://wdahskrcpjooqhwwxjiu.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_O74WxjCsacx4G7Dtemgvlw_M9_6VtlW";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 1. 인증 및 세션 검증
+    let allOrders = [];
+
+    // 인증 확인
     async function checkAdminAuth() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (!session) {
@@ -229,16 +321,9 @@
         return;
       }
 
-      // Role 체크
-      const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-
+      const { data: profile } = await supabaseClient.from('profiles').select('role').eq('id', session.user.id).single();
       if (profile && profile.role !== 'admin') {
-        alert("관리자 권한이 없는 계정입니다.");
-        await supabaseClient.auth.signOut();
+        alert("관리자 권한이 없습니다. 현장 포털로 이동합니다.");
         window.location.href = "index.html";
         return;
       }
@@ -246,7 +331,9 @@
       document.getElementById('loginOverlay').classList.add('hidden');
       document.getElementById('appLayout').classList.remove('hidden');
       document.getElementById('currentAdminEmail').innerText = session.user.email;
-      loadAllData();
+      loadAllOrders();
+      loadApiKeys();
+      loadUsers();
     }
 
     async function login() {
@@ -262,96 +349,201 @@
       checkAdminAuth();
     }
 
-    // 2. 탭 전환
     function switchTab(tabId, el) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      
-      const target = document.getElementById(tabId);
-      target.classList.remove('hidden');
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById(tabId).classList.remove('hidden');
       el.classList.add('active');
       document.getElementById('pageTitle').innerText = el.innerText;
     }
 
-    // 3. 데이터 항목 CRUD
-    async function loadDataItems() {
-      const { data } = await supabaseClient.from('items').select('*').order('created_at', { ascending: false });
-      const tbody = document.getElementById('dataTableBody');
-      tbody.innerHTML = (data || []).map(item => `
+    // 주문 데이터 조회 & KPI 계산
+    async function loadAllOrders() {
+      const { data, error } = await supabaseClient.from('sales_orders').select('*').order('order_date', { ascending: false });
+      if (error) return console.error(error);
+      allOrders = data || [];
+      renderKPIs(allOrders);
+      renderRecentDash(allOrders.slice(0, 8));
+      renderOrdersTable(allOrders);
+      renderCRMTable(allOrders);
+    }
+
+    function renderKPIs(items) {
+      const sum = (list, key) => list.reduce((acc, cur) => acc + Number(cur[key] || 0), 0);
+      const won = v => Number(v).toLocaleString() + '원';
+
+      const totalSales = sum(items, 'sales_amount');
+      const totalRefund = sum(items, 'refund_amount');
+      const totalNet = totalSales - totalRefund;
+
+      document.getElementById('kpiTotalNet').innerText = won(totalNet);
+      document.getElementById('kpiTotalGross').innerText = `총매출 ${won(totalSales)} · 환불 ${won(totalRefund)}`;
+
+      const chMap = { '매장': 'Store', '온라인': 'Online', 'VMS': 'Vms', '렌탈': 'Rental' };
+      ['매장', '온라인', 'VMS', '렌탈'].forEach(ch => {
+        const filtered = items.filter(i => i.channel_type === ch);
+        const net = sum(filtered, 'sales_amount') - sum(filtered, 'refund_amount');
+        const tag = chMap[ch];
+        document.getElementById(`kpi${tag}Net`).innerText = won(net);
+        document.getElementById(`kpi${tag}Cnt`).innerText = `거래 ${filtered.length}건`;
+      });
+    }
+
+    function renderRecentDash(items) {
+      document.getElementById('dashRecentBody').innerHTML = items.map(i => `
         <tr>
-          <td><span style="background:#eff6ff; color:#2563eb; padding:2px 6px; border-radius:4px; font-weight:600;">${item.category}</span></td>
-          <td><b>${item.title}</b></td>
-          <td style="color:#64748b;">${new Date(item.created_at).toLocaleString()}</td>
-          <td><button class="btn-danger" onclick="deleteItem(${item.id})">삭제</button></td>
+          <td><span class="badge-ch ch-${i.channel_type}">${i.channel_type}</span></td>
+          <td>${i.order_date}</td>
+          <td><b>${i.customer_name}</b></td>
+          <td>${i.product_name}</td>
+          <td style="text-align: right; font-weight: 700; color: #2563eb;">${Number(i.net_amount || (i.sales_amount - i.refund_amount)).toLocaleString()}원</td>
+          <td style="color: #475569;">${i.next_product || '-'}</td>
+          <td>${i.handler || '-'}</td>
         </tr>
       `).join('');
     }
 
-    async function createSingleItem() {
-      const category = document.getElementById('inputCat').value.trim();
-      const title = document.getElementById('inputTitle').value.trim();
-      const content = document.getElementById('inputContent').value.trim();
-      if (!category || !title) return alert("카테고리와 제목을 입력하세요.");
-
-      await supabaseClient.from('items').insert([{ category, title, content }]);
-      document.getElementById('inputCat').value = '';
-      document.getElementById('inputTitle').value = '';
-      document.getElementById('inputContent').value = '';
-      loadDataItems();
+    function renderOrdersTable(items) {
+      document.getElementById('ordersTableBody').innerHTML = items.map(i => `
+        <tr>
+          <td><span class="badge-ch ch-${i.channel_type}">${i.channel_type}</span></td>
+          <td>${i.order_date}</td>
+          <td><b>${i.customer_name}</b></td>
+          <td style="font-family: monospace; color:#64748b;">${i.customer_phone || '-'}</td>
+          <td>${i.product_name}</td>
+          <td style="text-align: right;">${Number(i.sales_amount).toLocaleString()}</td>
+          <td style="text-align: right; color:#dc2626;">${Number(i.refund_amount).toLocaleString()}</td>
+          <td style="text-align: right; font-weight: 700; color:#2563eb;">${Number(i.net_amount || (i.sales_amount - i.refund_amount)).toLocaleString()}</td>
+          <td style="color:#0f766e; font-weight: 600;">${i.next_product || '-'}</td>
+          <td>${i.handler || '-'}</td>
+          <td><button class="btn-danger" onclick="deleteOrder(${i.id})">삭제</button></td>
+        </tr>
+      `).join('');
     }
 
-    async function deleteItem(id) {
-      if (!confirm("삭제하시겠습니까?")) return;
-      await supabaseClient.from('items').delete().eq('id', id);
-      loadDataItems();
+    function renderCRMTable(items) {
+      const crmItems = items.filter(i => i.next_product && i.next_product.trim() !== '' && i.next_product !== '-');
+      document.getElementById('crmTableBody').innerHTML = crmItems.map(i => `
+        <tr>
+          <td><span class="badge-ch ch-${i.channel_type}">${i.channel_type}</span></td>
+          <td><b>${i.customer_name}</b></td>
+          <td style="font-family: monospace; color: #2563eb;">${i.customer_phone || '-'}</td>
+          <td>${i.product_name}</td>
+          <td><b style="color: #0f766e; background: #ccfbf1; padding: 3px 8px; border-radius: 4px;">${i.next_product}</b></td>
+          <td>${i.handler || '-'}</td>
+        </tr>
+      `).join('');
     }
 
-    // 4. 엑셀 일괄 업로드
-    async function processExcelUpload() {
-      const fileInput = document.getElementById('excelFileInput');
+    function filterOrders() {
+      const ch = document.getElementById('filterCh').value;
+      const kw = document.getElementById('searchKeyword').value.toLowerCase().trim();
+
+      const filtered = allOrders.filter(i => {
+        const matchCh = (ch === 'ALL' || i.channel_type === ch);
+        const matchKw = !kw || 
+          (i.customer_name && i.customer_name.toLowerCase().includes(kw)) ||
+          (i.customer_phone && i.customer_phone.includes(kw)) ||
+          (i.product_name && i.product_name.toLowerCase().includes(kw));
+        return matchCh && matchKw;
+      });
+
+      renderOrdersTable(filtered);
+    }
+
+    async function createSingleOrder() {
+      const payload = {
+        channel_type: document.getElementById('newCh').value,
+        order_date: document.getElementById('newDate').value || new Date().toISOString().split('T')[0],
+        customer_name: document.getElementById('newCust').value.trim(),
+        customer_phone: document.getElementById('newPhone').value.trim(),
+        product_name: document.getElementById('newProd').value.trim(),
+        sales_amount: Number(document.getElementById('newSales').value) || 0,
+        refund_amount: Number(document.getElementById('newRefund').value) || 0,
+        next_product: document.getElementById('nextProd').value.trim(),
+        handler: document.getElementById('newHandler').value.trim(),
+        notes: document.getElementById('newNotes').value.trim()
+      };
+
+      if (!payload.customer_name || !payload.product_name) return alert("고객명과 상품명을 입력하세요.");
+
+      const { error } = await supabaseClient.from('sales_orders').insert([payload]);
+      if (error) alert("등록 실패: " + error.message);
+      else {
+        alert("원장에 등록되었습니다.");
+        loadAllOrders();
+      }
+    }
+
+    async function deleteOrder(id) {
+      if (!confirm("해당 주문 내역을 삭제하시겠습니까?")) return;
+      await supabaseClient.from('sales_orders').delete().eq('id', id);
+      loadAllOrders();
+    }
+
+    // 엑셀 일괄 업로드
+    async function uploadOrdersExcel() {
+      const fileInput = document.getElementById('excelOrderFile');
       if (!fileInput.files.length) return alert("엑셀 파일을 선택하세요.");
 
       const file = fileInput.files[0];
       const reader = new FileReader();
       reader.onload = async function(e) {
         const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+        const wb = XLSX.read(data, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rawJson = XLSX.utils.sheet_to_json(sheet);
 
-        if (jsonData.length === 0) return alert("엑셀 내 데이터가 없습니다.");
+        const mapped = rawJson.map(r => ({
+          channel_type: r['구분'] || '매장',
+          order_date: r['주문일'] || new Date().toISOString().split('T')[0],
+          customer_name: r['고객명'] || '미상',
+          customer_phone: String(r['전화번호'] || ''),
+          product_name: r['구매 상품'] || r['구매상품'] || '',
+          sales_amount: Number(String(r['매출'] || '0').replace(/,/g, '')),
+          refund_amount: Number(String(r['환불'] || '0').replace(/,/g, '')),
+          next_product: r['다음 구매 예정 상품'] || r['다음구매예정상품'] || '',
+          handler: r['담당자'] || '',
+          notes: r['비고'] || ''
+        })).filter(r => r.product_name !== '');
 
-        const { error } = await supabaseClient.from('items').insert(jsonData);
-        if (error) {
-          alert("업로드 실패 (컬럼명 확인: category, title, content): " + error.message);
-        } else {
-          alert(`총 ${jsonData.length}건이 성공적으로 등록되었습니다.`);
+        if (!mapped.length) return alert("업로드할 유효한 데이터가 없습니다.");
+
+        const { error } = await supabaseClient.from('sales_orders').insert(mapped);
+        if (error) alert("엑셀 업로드 실패: " + error.message);
+        else {
+          alert(`총 ${mapped.length}건의 주문 데이터가 성공적으로 적재되었습니다.`);
           fileInput.value = '';
-          loadDataItems();
-          switchTab('tab-data', document.querySelectorAll('.nav-item')[1]);
+          loadAllOrders();
+          switchTab('tab-orders', document.querySelectorAll('.nav-item')[1]);
         }
       };
       reader.readAsArrayBuffer(file);
     }
 
-    // 5. API Key 관리
+    function exportToExcel() {
+      const ws = XLSX.utils.json_to_sheet(allOrders);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "매출원장");
+      XLSX.writeFile(wb, `sales_orders_export_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    // API Key & User 함수들
     async function loadApiKeys() {
       const { data } = await supabaseClient.from('api_keys').select('*').order('created_at', { ascending: false });
-      const tbody = document.getElementById('keysTableBody');
-      tbody.innerHTML = (data || []).map(k => `
+      document.getElementById('keysTableBody').innerHTML = (data || []).map(k => `
         <tr>
           <td><b>${k.name}</b></td>
-          <td><code style="background:#f1f5f9; padding:4px 8px; border-radius:4px;">${k.api_key}</code></td>
-          <td style="color:#64748b;">${new Date(k.created_at).toLocaleDateString()}</td>
-          <td><button class="btn-danger" onclick="deleteApiKey(${k.id})">폐기</button></td>
+          <td><code>${k.api_key}</code></td>
+          <td>${new Date(k.created_at).toLocaleDateString()}</td>
+          <td><button class="btn-danger" onclick="deleteApiKey(${k.id})">삭제</button></td>
         </tr>
       `).join('');
     }
 
     async function generateApiKey() {
       const name = document.getElementById('keyName').value.trim();
-      if (!name) return alert("식별 이름을 입력하세요.");
-
+      if (!name) return alert("이름을 입력하세요.");
       const randomKey = "sk_live_" + Array.from(crypto.getRandomValues(new Uint8Array(18))).map(b => b.toString(16).padStart(2, '0')).join('');
       await supabaseClient.from('api_keys').insert([{ name, api_key: randomKey }]);
       document.getElementById('keyName').value = '';
@@ -359,99 +551,58 @@
     }
 
     async function deleteApiKey(id) {
-      if (!confirm("해당 Key를 폐기하시겠습니까?")) return;
+      if (!confirm("삭제하시겠습니까?")) return;
       await supabaseClient.from('api_keys').delete().eq('id', id);
       loadApiKeys();
     }
 
-// 6. 권한 관리 (사용자 목록 & Role 제어 & 삭제)
     async function loadUsers() {
-      const { data, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
-      if (error) {
-        console.error("유저 목록 로드 실패:", error);
-        return;
-      }
-      
-      const tbody = document.getElementById('usersTableBody');
-      tbody.innerHTML = (data || []).map(u => `
+      const { data } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
+      document.getElementById('usersTableBody').innerHTML = (data || []).map(u => `
         <tr>
-          <td><b>${escapeHtml(u.email)}</b></td>
-          <td><span class="badge ${u.role === 'admin' ? 'badge-admin' : 'badge-user'}">${u.role.toUpperCase()}</span></td>
+          <td><b>${u.email}</b></td>
+          <td><span style="font-weight:700; color:${u.role==='admin'?'#dc2626':'#16a34a'}">${u.role.toUpperCase()}</span></td>
           <td>
-            <button class="btn btn-secondary" style="padding:4px 8px; font-size:12px; margin-right:4px;" onclick="changeRole('${u.id}', '${u.role === 'admin' ? 'user' : 'admin'}')">
-              ${u.role === 'admin' ? '일반 유저로 강등' : '관리자로 승격'}
-            </button>
-            <button class="btn-danger" style="padding:4px 8px; font-size:12px;" onclick="deleteProfileUser('${u.id}')">
-              삭제
-            </button>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="toggleRole('${u.id}', '${u.role}')">권한변경</button>
+            <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteUser('${u.id}')">삭제</button>
           </td>
         </tr>
       `).join('');
     }
 
-    // 역할 변경 (승격/강등)
-    async function changeRole(userId, newRole) {
-      const { error } = await supabaseClient.from('profiles').update({ role: newRole }).eq('id', userId);
-      if (error) {
-        alert("권한 변경 실패: " + error.message);
-      } else {
-        alert(`권한이 ${newRole.toUpperCase()}로 변경되었습니다.`);
-        loadUsers();
-      }
+    async function toggleRole(id, curRole) {
+      const nextRole = curRole === 'admin' ? 'user' : 'admin';
+      await supabaseClient.from('profiles').update({ role: nextRole }).eq('id', id);
+      loadUsers();
     }
 
-    // 유저 프로필 레코드 삭제
-    async function deleteProfileUser(userId) {
-      if (!confirm("해당 계정 정보를 목록에서 삭제하시겠습니까?")) return;
-      const { error } = await supabaseClient.from('profiles').delete().eq('id', userId);
-      if (error) {
-        alert("삭제 실패: " + error.message);
-      } else {
-        loadUsers();
-      }
+    async function deleteUser(id) {
+      if (!confirm("삭제하시겠습니까?")) return;
+      await supabaseClient.from('profiles').delete().eq('id', id);
+      loadUsers();
     }
 
-    // 신규 계정 즉시 발급
     async function createNewUserByAdmin() {
       const email = document.getElementById('newMemberEmail').value.trim();
       const password = document.getElementById('newMemberPassword').value;
       const role = document.getElementById('newMemberRole').value;
 
-      if (!email || !password) return alert("이메일과 비밀번호를 모두 입력하세요.");
-      if (!email.includes('@') || !email.includes('.')) {
-        return alert("이메일은 반드시 유효한 형식(예: user@test.com)이어야 합니다.");
-      }
-      if (password.length < 6) {
-        return alert("비밀번호는 최소 6자리 이상이어야 합니다.");
-      }
-
-      // DB RPC 함수 호출
       const { data, error } = await supabaseClient.rpc('create_user_by_admin', {
         new_email: email,
         new_password: password,
         new_role: role
       });
 
-      if (error) {
-        alert("생성 실패: " + error.message);
-        return;
+      if (error || (data && !data.success)) alert("생성 실패: " + (error ? error.message : data.error));
+      else {
+        alert("계정이 등록되었습니다.");
+        document.getElementById('newMemberEmail').value = '';
+        document.getElementById('newMemberPassword').value = '';
+        loadUsers();
       }
-
-      if (data && !data.success) {
-        alert("생성 실패: " + data.error);
-        return;
-      }
-
-      alert(`✅ [${role.toUpperCase()}] 계정이 즉시 생성되었습니다!\n아이디: ${email}`);
-      document.getElementById('newMemberEmail').value = '';
-      document.getElementById('newMemberPassword').value = '';
-      loadUsers();
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
-    }
+    checkAdminAuth();
   </script>
 </body>
 </html>
