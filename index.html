@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>데이터 조회 서비스 (대민용)</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f8fafc; color: #1e293b; padding: 24px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0; }
+    .search-bar { width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; margin-bottom: 20px; outline: none; }
+    .card-list { display: grid; gap: 12px; }
+    .card { background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card-category { font-size: 12px; font-weight: 600; color: #2563eb; background: #eff6ff; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+    .card-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+    .card-content { color: #64748b; font-size: 14px; line-height: 1.5; }
+    .btn-admin { font-size: 13px; color: #64748b; text-decoration: none; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h2>📊 공개 데이터 리스트</h2>
+      <a href="admin.html" class="btn-admin">관리자 로그인</a>
+    </header>
+
+    <input type="text" id="searchInput" class="search-bar" placeholder="제목 또는 카테고리 검색..." oninput="filterData()">
+
+    <div id="dataList" class="card-list">
+      <p style="color: #94a3b8;">데이터를 불러오는 중입니다...</p>
+    </div>
+  </div>
+
+  <script>
+    // 1. Supabase 클라이언트 초기화 (본인 키로 변경)
+    const SUPABASE_URL = "https://wdahskrcpjooqhwwxjiu.supabase.co/rest/v1/";
+    const SUPABASE_ANON_KEY = "sb_publishable_O74WxjCsacx4G7Dtemgvlw_M9_6VtlW";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allItems = [];
+
+    // 2. 데이터 불러오기 (Public Read)
+    async function loadData() {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        document.getElementById('dataList').innerHTML = `<p style="color:red;">데이터 로드 실패: ${error.message}</p>`;
+        return;
+      }
+
+      allItems = data || [];
+      renderData(allItems);
+    }
+
+    // 3. 화면 렌더링
+    function renderData(items) {
+      const listEl = document.getElementById('dataList');
+      if (items.length === 0) {
+        listEl.innerHTML = `<p style="color: #94a3b8;">등록된 데이터가 없습니다.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = items.map(item => `
+        <div class="card">
+          <span class="card-category">${item.category}</span>
+          <h3 class="card-title">${item.title}</h3>
+          <p class="card-content">${item.content || '내용 없음'}</p>
+        </div>
+      `).join('');
+    }
+
+    // 4. 간이 검색 필터
+    function filterData() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allItems.filter(item => 
+        item.title.toLowerCase().includes(query) || 
+        item.category.toLowerCase().includes(query)
+      );
+      renderData(filtered);
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
