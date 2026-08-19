@@ -3,94 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>현장 담당자 주문 등록 & 고객 CRM 포털</title>
+  <title>고객 구매 만족도 & 리뷰 이벤트 등록</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
+    body { background-color: #f1f5f9; color: #1e293b; padding: 24px 16px 60px; display: flex; justify-content: center; }
+    .form-wrapper { width: 100%; max-width: 540px; background: white; border-radius: 14px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.04); overflow: hidden; }
+    
+    .form-header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 28px 24px; text-align: center; }
+    .form-header h1 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .form-header p { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+
+    .form-body { padding: 28px 24px; }
+    .field-group { margin-bottom: 20px; }
+    .field-label { display: block; font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 6px; }
+    .field-label span.req { color: #ef4444; margin-left: 2px; }
+    
+    input[type="text"], input[type="tel"], select, textarea {
+      width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; background: #fff;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    /* 별점 선택 */
+    .star-rating { display: flex; gap: 8px; font-size: 24px; cursor: pointer; color: #cbd5e1; }
+    .star-rating .active { color: #fbbf24; }
+
+    /* 라디오 버튼 그룹 */
+    .radio-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 4px; }
+    .radio-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-size: 13px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .radio-card input { cursor: pointer; }
+
+    /* 동의 체크박스 */
+    .agree-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+    .agree-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #475569; margin-bottom: 8px; }
+    .agree-item:last-child { margin-bottom: 0; }
+    .agree-item input { margin-top: 3px; cursor: pointer; }
+
+    .btn-submit { width: 100%; padding: 15px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+    .btn-submit:hover { background: #1d4ed8; }
+
+    /* 완료 모달 */
+    #successModal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .modal-content { background: white; padding: 32px 24px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; }
     .hidden { display: none !important; }
-
-    /* 로그인 카드 */
-    #loginWrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-    .login-box { background: white; width: 100%; max-width: 400px; padding: 36px 28px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
-    .login-box h2 { font-size: 19px; font-weight: 700; text-align: center; margin-bottom: 6px; }
-    .login-box p { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 24px; }
-    .login-box input { width: 100%; padding: 11px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
-    .btn-login { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
-
-    /* 포털 메인 */
-    #portalWrapper { max-width: 960px; margin: 0 auto; padding: 24px 16px 80px; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid #e2e8f0; }
-    .section-card { background: white; padding: 22px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-    .section-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: #0f172a; }
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px; }
-    input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
-    .btn-submit { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 14px; margin-top: 6px; }
-
-    /* CRM 고객 조회 카드 */
-    .search-box { width: 100%; padding: 12px 16px; border: 2px solid #3b82f6; border-radius: 8px; font-size: 15px; margin-bottom: 16px; outline: none; }
-    .cust-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
-    .cust-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-    .badge-ch { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #eff6ff; color: #2563eb; }
-    .next-box { margin-top: 8px; padding: 8px 12px; background: #ecfdf5; border-radius: 6px; font-size: 13px; color: #065f46; }
   </style>
 </head>
 <body>
 
-  <div id="loginWrapper">
-    <div class="login-box">
-      <h2>📱 현장 담당자 포털</h2>
-      <p>부여받은 담당자 계정으로 로그인하세요.</p>
-      <input type="email" id="userEmail" placeholder="담당자 이메일">
-      <input type="password" id="userPassword" placeholder="비밀번호">
-      <button class="btn-login" onclick="login()">포털 접속</button>
-      <div style="text-align: center; margin-top: 16px;">
-        <a href="admin.html" style="font-size: 12.5px; color: #64748b; text-decoration: none;">총괄 관리자 CMS ➔</a>
-      </div>
+  <div class="form-wrapper">
+    <div class="form-header">
+      <h1>🎁 구매 고객 만족도 & 리뷰 설문</h1>
+      <p>구매해 주셔서 감사합니다.<br>소중한 후기를 남겨주시면 이벤트 혜택을 드립니다.</p>
     </div>
+
+    <form class="form-body" id="surveyForm" onsubmit="handleFormSubmit(event)">
+      <!-- 1. 기본 정보 -->
+      <div class="field-group">
+        <label class="field-label">성함 <span class="req">*</span></label>
+        <input type="text" id="custName" placeholder="예: 홍길동" required>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">휴대폰 번호 <span class="req">*</span></label>
+        <input type="tel" id="custPhone" placeholder="010-0000-0000" maxlength="13" oninput="autoHyphen(this)" required>
+      </div>
+
+      <!-- 2. 구매 정보 -->
+      <div class="field-group">
+        <label class="field-label">구매 채널 <span class="req">*</span></label>
+        <select id="purchaseCh" required>
+          <option value="매장">오프라인 매장 방문 구매</option>
+          <option value="온라인">온라인 몰 / 스마트스토어</option>
+          <option value="렌탈">가전 렌탈 약정</option>
+          <option value="VMS">기업(B2B) / 복합기 소모품</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">구매하신 제품명 <span class="req">*</span></label>
+        <input type="text" id="prodName" placeholder="예: 갤럭시 Z 폴드8, 비스포크 냉장고 등" required>
+      </div>
+
+      <!-- 3. 만족도 & 리뷰 -->
+      <div class="field-group">
+        <label class="field-label">제품 및 서비스 만족도</label>
+        <div class="star-rating" id="starContainer">
+          <span onclick="setRating(1)" class="active">★</span>
+          <span onclick="setRating(2)" class="active">★</span>
+          <span onclick="setRating(3)" class="active">★</span>
+          <span onclick="setRating(4)" class="active">★</span>
+          <span onclick="setRating(5)" class="active">★</span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">리뷰 작성 여부 <span class="req">*</span></label>
+        <div class="radio-grid">
+          <label class="radio-card"><input type="radio" name="reviewStatus" value="작성완료" checked> 영수증/포토 리뷰 완료</label>
+          <label class="radio-card"><input type="radio" name="reviewStatus" value="작성예정"> 3일 이내 작성 예정</label>
+          <label class="radio-card"><input type="radio" name="reviewStatus" value="블로그/SNS"> 블로그/SNS 후기</label>
+          <label class="radio-card"><input type="radio" name="reviewStatus" value="미작성"> 리뷰 미작성</label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">리뷰 링크 또는 한줄 후기</label>
+        <textarea id="reviewUrl" rows="2" placeholder="리뷰 작성 URL 또는 응원 한마디를 적어주세요."></textarea>
+      </div>
+
+      <!-- 4. 다음 구매 예정 상품 (CRM 연계) -->
+      <div class="field-group">
+        <label class="field-label">다음에 구매 또는 관심 있는 제품은 무엇인가요?</label>
+        <input type="text" id="nextInterest" placeholder="예: 사운드바, 워치, 공기청정기 필터, 정수기 등">
+      </div>
+
+      <!-- 5. 약관 동의 -->
+      <div class="agree-box">
+        <div class="agree-item">
+          <input type="checkbox" id="agreePrivacy" required checked>
+          <label for="agreePrivacy"><b>[필수]</b> 개인정보 수집 및 이용 동의 (고객 확인 및 이벤트 진행용)</label>
+        </div>
+        <div class="agree-item">
+          <input type="checkbox" id="agreeMarketing" checked>
+          <label for="agreeMarketing"><b>[선택]</b> 신제품 알림 및 맞춤형 할인 혜택 정보 수신 동의</label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">이벤트 등록 및 설문 제출</button>
+    </form>
   </div>
 
-  <div id="portalWrapper" class="hidden">
-    <header>
-      <div>
-        <h2 style="font-size: 18px; font-weight: 800;">⚡ 현장 주문 등록 & CRM 조회기</h2>
-        <span id="userBadge" style="font-size: 12px; color: #64748b;"></span>
-      </div>
-      <div>
-        <a href="admin.html" style="font-size: 13px; margin-right: 10px; color: #2563eb; text-decoration: none; font-weight: 600;">CMS 이동</a>
-        <button onclick="logout()" style="padding: 6px 12px; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-size: 12px;">로그아웃</button>
-      </div>
-    </header>
-
-    <!-- 1. 현장 주문/상담 1건 즉시 등록 -->
-    <div class="section-card">
-      <h3>➕ 현장 상담 / 주문 즉시 등록</h3>
-      <div class="form-grid">
-        <select id="regCh">
-          <option value="매장">매장 (DPS 방문)</option>
-          <option value="렌탈">렌탈 (약정 접수)</option>
-          <option value="VMS">VMS (기업 상담/납품)</option>
-          <option value="온라인">온라인 (기타 주문)</option>
-        </select>
-        <input type="date" id="regDate">
-        <input type="text" id="regCust" placeholder="고객명 (예: 김민준)">
-        <input type="text" id="regPhone" placeholder="전화번호 (010-0000-0000)">
-        <input type="text" id="regProd" placeholder="구매/상담 상품">
-        <input type="number" id="regSales" placeholder="결제/약정 금액 (원)">
-        <input type="text" id="regNext" placeholder="🎯 다음 구매 예정 상품 (CRM)">
-        <input type="text" id="regHandler" placeholder="상담 담당자">
-      </div>
-      <button class="btn-submit" onclick="submitFieldOrder()">주문/상담 내역 DB 등록</button>
-    </div>
-
-    <!-- 2. 고객 전화번호로 과거 이력 & 차기 구매 상품 실시간 조회 -->
-    <div class="section-card">
-      <h3>🔍 고객 상담 CRM 조회 (전화번호 / 고객명)</h3>
-      <input type="text" id="crmSearch" class="search-box" placeholder="고객 전화번호 뒷자리 또는 이름 입력 (예: 9281, 김민준)..." oninput="searchCustomer()">
-      <div id="crmResultList">
-        <p style="color: #94a3b8; font-size: 13.5px; text-align: center; padding: 20px 0;">조회할 고객 정보를 입력하세요.</p>
-      </div>
+  <!-- 제출 완료 알림 모달 -->
+  <div id="successModal" class="hidden">
+    <div class="modal-content">
+      <h2 style="font-size: 20px; color: #16a34a; margin-bottom: 8px;">🎉 접수 완료</h2>
+      <p style="font-size: 14px; color: #475569; margin-bottom: 20px; line-height: 1.5;">
+        소중한 참여 감사합니다.<br>담당자 확인 후 이벤트 혜택이 발송됩니다.
+      </p>
+      <button onclick="closeModal()" style="width:100%; padding:10px; background:#0f172a; color:white; border:none; border-radius:6px; font-weight:700; cursor:pointer;">확인</button>
     </div>
   </div>
 
@@ -99,110 +150,63 @@
     const SUPABASE_ANON_KEY = "sb_publishable_O74WxjCsacx4G7Dtemgvlw_M9_6VtlW";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let cachedOrders = [];
+    let currentRating = 5;
 
-    async function checkAuth() {
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        document.getElementById('loginWrapper').classList.add('hidden');
-        document.getElementById('portalWrapper').classList.remove('hidden');
-        document.getElementById('userBadge').innerText = `접속자: ${session.user.email}`;
-        document.getElementById('regDate').value = new Date().toISOString().split('T')[0];
-        fetchOrders();
-      } else {
-        document.getElementById('loginWrapper').classList.remove('hidden');
-        document.getElementById('portalWrapper').classList.add('hidden');
+    function setRating(val) {
+      currentRating = val;
+      const stars = document.getElementById('starContainer').children;
+      for (let i = 0; i < 5; i++) {
+        stars[i].classList.toggle('active', i < val);
       }
     }
 
-    async function login() {
-      const email = document.getElementById('userEmail').value.trim();
-      const password = document.getElementById('userPassword').value;
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) return alert("로그인 실패: " + error.message);
-      checkAuth();
+    function autoHyphen(target) {
+      target.value = target.value
+        .replace(/[^0-9]/g, '')
+        .replace(/^(\d{0,3})(\d{0,4})(\d{0,4})$/g, "$1-$2-$3")
+        .replace(/(-{1,2})$/g, "");
     }
 
-    async function logout() {
-      await supabaseClient.auth.signOut();
-      checkAuth();
-    }
+    async function handleFormSubmit(e) {
+      e.preventDefault();
 
-    async function fetchOrders() {
-      const { data } = await supabaseClient.from('sales_orders').select('*').order('created_at', { ascending: false });
-      cachedOrders = data || [];
-    }
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "제출 중...";
 
-    async function submitFieldOrder() {
+      const selectedStatus = document.querySelector('input[name="reviewStatus"]:checked').value;
+
       const payload = {
-        channel_type: document.getElementById('regCh').value,
-        order_date: document.getElementById('regDate').value,
-        customer_name: document.getElementById('regCust').value.trim(),
-        customer_phone: document.getElementById('regPhone').value.trim(),
-        product_name: document.getElementById('regProd').value.trim(),
-        sales_amount: Number(document.getElementById('regSales').value) || 0,
-        refund_amount: 0,
-        next_product: document.getElementById('regNext').value.trim(),
-        handler: document.getElementById('regHandler').value.trim()
+        customer_name: document.getElementById('custName').value.trim(),
+        customer_phone: document.getElementById('custPhone').value.trim(),
+        purchase_channel: document.getElementById('purchaseCh').value,
+        product_name: document.getElementById('prodName').value.trim(),
+        rating: currentRating,
+        review_status: selectedStatus,
+        review_url: document.getElementById('reviewUrl').value.trim(),
+        next_interested_product: document.getElementById('nextInterest').value.trim(),
+        privacy_consent: document.getElementById('agreePrivacy').checked,
+        marketing_consent: document.getElementById('agreeMarketing').checked
       };
 
-      if (!payload.customer_name || !payload.product_name) return alert("고객명과 상품명을 입력하세요.");
+      const { error } = await supabaseClient.from('customer_submissions').insert([payload]);
 
-      const { error } = await supabaseClient.from('sales_orders').insert([payload]);
-      if (error) alert("등록 실패: " + error.message);
-      else {
-        alert("✅ 주문 내역이 등록되었습니다. 관리자 대시보드에 즉시 반영됩니다.");
-        document.getElementById('regCust').value = '';
-        document.getElementById('regPhone').value = '';
-        document.getElementById('regProd').value = '';
-        document.getElementById('regSales').value = '';
-        document.getElementById('regNext').value = '';
-        fetchOrders();
+      if (error) {
+        alert("제출 중 오류가 발생했습니다: " + error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "이벤트 등록 및 설문 제출";
+      } else {
+        document.getElementById('successModal').classList.remove('hidden');
+        document.getElementById('surveyForm').reset();
+        setRating(5);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "이벤트 등록 및 설문 제출";
       }
     }
 
-    function searchCustomer() {
-      const q = document.getElementById('crmSearch').value.toLowerCase().trim();
-      const listEl = document.getElementById('crmResultList');
-
-      if (!q) {
-        listEl.innerHTML = `<p style="color: #94a3b8; font-size: 13.5px; text-align: center; padding: 20px 0;">조회할 고객 정보를 입력하세요.</p>`;
-        return;
-      }
-
-      const results = cachedOrders.filter(i => 
-        (i.customer_phone && i.customer_phone.includes(q)) || 
-        (i.customer_name && i.customer_name.toLowerCase().includes(q))
-      );
-
-      if (!results.length) {
-        listEl.innerHTML = `<p style="color: #94a3b8; font-size: 13.5px; text-align: center; padding: 20px 0;">일치하는 고객 구매 이력이 없습니다.</p>`;
-        return;
-      }
-
-      listEl.innerHTML = results.map(r => `
-        <div class="cust-card">
-          <div class="cust-header">
-            <div>
-              <span class="badge-ch">${r.channel_type}</span>
-              <b style="font-size: 15px; margin-left: 6px;">${r.customer_name}</b>
-              <span style="font-size: 13px; color: #64748b; margin-left: 8px;">(${r.customer_phone || '번호 없음'})</span>
-            </div>
-            <span style="font-size: 12px; color: #94a3b8;">${r.order_date} (담당: ${r.handler || '-'})</span>
-          </div>
-          <div style="font-size: 13.5px; color: #334155; margin-top: 4px;">
-            구매 상품: <b>${r.product_name}</b> (${Number(r.sales_amount).toLocaleString()}원)
-          </div>
-          ${r.next_product ? `
-            <div class="next-box">
-              💡 <b>차기 구매 권유 상품:</b> ${r.next_product}
-            </div>
-          ` : ''}
-        </div>
-      `).join('');
+    function closeModal() {
+      document.getElementById('successModal').classList.add('hidden');
     }
-
-    checkAuth();
   </script>
 </body>
 </html>
