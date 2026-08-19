@@ -3,205 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>데이터 조회 서비스 (대민 포털)</title>
+  <title>현장 담당자 주문 등록 & 고객 CRM 포털</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
+    body { background-color: #f8fafc; color: #1e293b; min-height: 100vh; }
     .hidden { display: none !important; }
 
-    /* 1. 대민 전용 로그인 화면 */
-    #loginWrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .login-box { background: white; width: 100%; max-width: 420px; padding: 40px 32px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-    .login-box h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #0f172a; text-align: center; }
-    .login-box p.desc { font-size: 13px; color: #64748b; margin-bottom: 24px; text-align: center; line-height: 1.4; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
-    .form-group input { width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; transition: border-color 0.2s; }
-    .form-group input:focus { border-color: #2563eb; }
-    .btn-login { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
-    .btn-login:hover { background: #1d4ed8; }
-    .admin-link { text-align: center; margin-top: 20px; font-size: 12.5px; color: #94a3b8; }
-    .admin-link a { color: #64748b; text-decoration: none; font-weight: 500; }
-    .admin-link a:hover { text-decoration: underline; }
+    /* 로그인 카드 */
+    #loginWrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .login-box { background: white; width: 100%; max-width: 400px; padding: 36px 28px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    .login-box h2 { font-size: 19px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+    .login-box p { font-size: 13px; color: #64748b; text-align: center; margin-bottom: 24px; }
+    .login-box input { width: 100%; padding: 11px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+    .btn-login { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
 
-    /* 2. 로그인 후 대민 포털 화면 */
-    #portalWrapper { max-width: 1000px; margin: 0 auto; width: 100%; padding: 32px 20px 80px; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0; }
-    .brand { font-size: 20px; font-weight: 800; color: #0f172a; }
-    .user-info { display: flex; align-items: center; gap: 12px; }
-    .user-email-badge { background: #eff6ff; color: #2563eb; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
-    .btn-logout { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; }
-    .btn-logout:hover { background: #f1f5f9; }
+    /* 포털 메인 */
+    #portalWrapper { max-width: 960px; margin: 0 auto; padding: 24px 16px 80px; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 2px solid #e2e8f0; }
+    .section-card { background: white; padding: 22px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .section-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: #0f172a; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
+    .btn-submit { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 14px; margin-top: 6px; }
 
-    .search-container { position: relative; margin-bottom: 24px; }
-    .search-input { width: 100%; padding: 14px 18px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-    .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-
-    .card-list { display: grid; gap: 14px; }
-    .data-card { background: white; padding: 22px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: transform 0.15s, box-shadow 0.15s; }
-    .data-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-    .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .card-category { font-size: 12px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 3px 8px; border-radius: 4px; }
-    .card-date { font-size: 12px; color: #94a3b8; }
-    .card-title { font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-    .card-content { color: #475569; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
-    .empty-notice { text-align: center; padding: 60px 0; color: #94a3b8; font-size: 14px; }
+    /* CRM 고객 조회 카드 */
+    .search-box { width: 100%; padding: 12px 16px; border: 2px solid #3b82f6; border-radius: 8px; font-size: 15px; margin-bottom: 16px; outline: none; }
+    .cust-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+    .cust-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .badge-ch { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #eff6ff; color: #2563eb; }
+    .next-box { margin-top: 8px; padding: 8px 12px; background: #ecfdf5; border-radius: 6px; font-size: 13px; color: #065f46; }
   </style>
 </head>
 <body>
 
-  <!-- 1. 대민 전용 로그인 영역 -->
   <div id="loginWrapper">
     <div class="login-box">
-      <h2>🔐 데이터 포털 로그인</h2>
-      <p class="desc">관리자가 발급한 계정으로 로그인해 주세요.<br>인증된 사용자만 데이터를 열람할 수 있습니다.</p>
-      
-      <div class="form-group">
-        <label for="userEmail">이메일 계정</label>
-        <input type="email" id="userEmail" placeholder="user@example.com" autocomplete="email">
-      </div>
-      
-      <div class="form-group">
-        <label for="userPassword">비밀번호</label>
-        <input type="password" id="userPassword" placeholder="••••••••" autocomplete="current-password">
-      </div>
-      
-      <button class="btn-login" onclick="loginPortal()">포털 접속하기</button>
-
-      <div class="admin-link">
-        시스템 관리자이신가요? <a href="admin.html">CMS 관리자 이동 ➔</a>
+      <h2>📱 현장 담당자 포털</h2>
+      <p>부여받은 담당자 계정으로 로그인하세요.</p>
+      <input type="email" id="userEmail" placeholder="담당자 이메일">
+      <input type="password" id="userPassword" placeholder="비밀번호">
+      <button class="btn-login" onclick="login()">포털 접속</button>
+      <div style="text-align: center; margin-top: 16px;">
+        <a href="admin.html" style="font-size: 12.5px; color: #64748b; text-decoration: none;">총괄 관리자 CMS ➔</a>
       </div>
     </div>
   </div>
 
-  <!-- 2. 로그인 완료 후 데이터 조회 포털 영역 -->
   <div id="portalWrapper" class="hidden">
     <header>
-      <div class="brand">📊 통합 데이터 서비스</div>
-      <div class="user-info">
-        <span id="userEmailDisplay" class="user-email-badge"></span>
-        <button class="btn-logout" onclick="logoutPortal()">로그아웃</button>
+      <div>
+        <h2 style="font-size: 18px; font-weight: 800;">⚡ 현장 주문 등록 & CRM 조회기</h2>
+        <span id="userBadge" style="font-size: 12px; color: #64748b;"></span>
+      </div>
+      <div>
+        <a href="admin.html" style="font-size: 13px; margin-right: 10px; color: #2563eb; text-decoration: none; font-weight: 600;">CMS 이동</a>
+        <button onclick="logout()" style="padding: 6px 12px; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-size: 12px;">로그아웃</button>
       </div>
     </header>
 
-    <div class="search-container">
-      <input type="text" id="searchInput" class="search-input" placeholder="🔍 카테고리, 제목, 내용 검색..." oninput="handleSearch()">
+    <!-- 1. 현장 주문/상담 1건 즉시 등록 -->
+    <div class="section-card">
+      <h3>➕ 현장 상담 / 주문 즉시 등록</h3>
+      <div class="form-grid">
+        <select id="regCh">
+          <option value="매장">매장 (DPS 방문)</option>
+          <option value="렌탈">렌탈 (약정 접수)</option>
+          <option value="VMS">VMS (기업 상담/납품)</option>
+          <option value="온라인">온라인 (기타 주문)</option>
+        </select>
+        <input type="date" id="regDate">
+        <input type="text" id="regCust" placeholder="고객명 (예: 김민준)">
+        <input type="text" id="regPhone" placeholder="전화번호 (010-0000-0000)">
+        <input type="text" id="regProd" placeholder="구매/상담 상품">
+        <input type="number" id="regSales" placeholder="결제/약정 금액 (원)">
+        <input type="text" id="regNext" placeholder="🎯 다음 구매 예정 상품 (CRM)">
+        <input type="text" id="regHandler" placeholder="상담 담당자">
+      </div>
+      <button class="btn-submit" onclick="submitFieldOrder()">주문/상담 내역 DB 등록</button>
     </div>
 
-    <div id="cardContainer" class="card-list">
-      <!-- 실시간 데이터 카드 렌더링 -->
+    <!-- 2. 고객 전화번호로 과거 이력 & 차기 구매 상품 실시간 조회 -->
+    <div class="section-card">
+      <h3>🔍 고객 상담 CRM 조회 (전화번호 / 고객명)</h3>
+      <input type="text" id="crmSearch" class="search-box" placeholder="고객 전화번호 뒷자리 또는 이름 입력 (예: 9281, 김민준)..." oninput="searchCustomer()">
+      <div id="crmResultList">
+        <p style="color: #94a3b8; font-size: 13.5px; text-align: center; padding: 20px 0;">조회할 고객 정보를 입력하세요.</p>
+      </div>
     </div>
   </div>
 
   <script>
-    // Supabase 클라이언트 초기화
     const SUPABASE_URL = "https://wdahskrcpjooqhwwxjiu.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_O74WxjCsacx4G7Dtemgvlw_M9_6VtlW";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let cachedItems = [];
+    let cachedOrders = [];
 
-    // 세션 검증
-    async function checkAuthSession() {
+    async function checkAuth() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
         document.getElementById('loginWrapper').classList.add('hidden');
         document.getElementById('portalWrapper').classList.remove('hidden');
-        document.getElementById('userEmailDisplay').innerText = session.user.email;
-        loadPortalData();
+        document.getElementById('userBadge').innerText = `접속자: ${session.user.email}`;
+        document.getElementById('regDate').value = new Date().toISOString().split('T')[0];
+        fetchOrders();
       } else {
         document.getElementById('loginWrapper').classList.remove('hidden');
         document.getElementById('portalWrapper').classList.add('hidden');
       }
     }
 
-    // 로그인 실행
-    async function loginPortal() {
+    async function login() {
       const email = document.getElementById('userEmail').value.trim();
       const password = document.getElementById('userPassword').value;
-
-      if (!email || !password) {
-        alert("이메일과 비밀번호를 모두 입력해주세요.");
-        return;
-      }
-
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) {
-        alert("로그인 실패: 아이디 또는 비밀번호가 올바르지 않습니다.");
-      } else {
-        checkAuthSession();
-      }
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) return alert("로그인 실패: " + error.message);
+      checkAuth();
     }
 
-    // 로그아웃
-    async function logoutPortal() {
+    async function logout() {
       await supabaseClient.auth.signOut();
-      checkAuthSession();
+      checkAuth();
     }
 
-    // 데이터 조회 (인증된 세션)
-    async function loadPortalData() {
-      const { data, error } = await supabaseClient
-        .from('items')
-        .select('*')
-        .order('created_at', { ascending: false });
+    async function fetchOrders() {
+      const { data } = await supabaseClient.from('sales_orders').select('*').order('created_at', { ascending: false });
+      cachedOrders = data || [];
+    }
 
-      if (error) {
-        console.error("데이터 로드 실패:", error);
+    async function submitFieldOrder() {
+      const payload = {
+        channel_type: document.getElementById('regCh').value,
+        order_date: document.getElementById('regDate').value,
+        customer_name: document.getElementById('regCust').value.trim(),
+        customer_phone: document.getElementById('regPhone').value.trim(),
+        product_name: document.getElementById('regProd').value.trim(),
+        sales_amount: Number(document.getElementById('regSales').value) || 0,
+        refund_amount: 0,
+        next_product: document.getElementById('regNext').value.trim(),
+        handler: document.getElementById('regHandler').value.trim()
+      };
+
+      if (!payload.customer_name || !payload.product_name) return alert("고객명과 상품명을 입력하세요.");
+
+      const { error } = await supabaseClient.from('sales_orders').insert([payload]);
+      if (error) alert("등록 실패: " + error.message);
+      else {
+        alert("✅ 주문 내역이 등록되었습니다. 관리자 대시보드에 즉시 반영됩니다.");
+        document.getElementById('regCust').value = '';
+        document.getElementById('regPhone').value = '';
+        document.getElementById('regProd').value = '';
+        document.getElementById('regSales').value = '';
+        document.getElementById('regNext').value = '';
+        fetchOrders();
+      }
+    }
+
+    function searchCustomer() {
+      const q = document.getElementById('crmSearch').value.toLowerCase().trim();
+      const listEl = document.getElementById('crmResultList');
+
+      if (!q) {
+        listEl.innerHTML = `<p style="color: #94a3b8; font-size: 13.5px; text-align: center; padding: 20px 0;">조회할 고객 정보를 입력하세요.</p>`;
         return;
       }
 
-      cachedItems = data || [];
-      renderItems(cachedItems);
-    }
+      const results = cachedOrders.filter(i => 
+        (i.customer_phone && i.customer_phone.includes(q)) || 
+        (i.customer_name && i.customer_name.toLowerCase().includes(q))
+      );
 
-    // 카드 목록 렌더링
-    function renderItems(items) {
-      const container = document.getElementById('cardContainer');
-      if (items.length === 0) {
-        container.innerHTML = `<div class="empty-notice">조회 가능한 데이터가 없습니다.</div>`;
+      if (!results.length) {
+        listEl.innerHTML = `<p style="color: #94a3b8; font-size: 13.5px; text-align: center; padding: 20px 0;">일치하는 고객 구매 이력이 없습니다.</p>`;
         return;
       }
 
-      container.innerHTML = items.map(item => `
-        <div class="data-card">
-          <div class="card-meta">
-            <span class="card-category">${escapeHtml(item.category)}</span>
-            <span class="card-date">${new Date(item.created_at).toLocaleDateString()}</span>
+      listEl.innerHTML = results.map(r => `
+        <div class="cust-card">
+          <div class="cust-header">
+            <div>
+              <span class="badge-ch">${r.channel_type}</span>
+              <b style="font-size: 15px; margin-left: 6px;">${r.customer_name}</b>
+              <span style="font-size: 13px; color: #64748b; margin-left: 8px;">(${r.customer_phone || '번호 없음'})</span>
+            </div>
+            <span style="font-size: 12px; color: #94a3b8;">${r.order_date} (담당: ${r.handler || '-'})</span>
           </div>
-          <h3 class="card-title">${escapeHtml(item.title)}</h3>
-          <p class="card-content">${escapeHtml(item.content || '상세 내용이 없습니다.')}</p>
+          <div style="font-size: 13.5px; color: #334155; margin-top: 4px;">
+            구매 상품: <b>${r.product_name}</b> (${Number(r.sales_amount).toLocaleString()}원)
+          </div>
+          ${r.next_product ? `
+            <div class="next-box">
+              💡 <b>차기 구매 권유 상품:</b> ${r.next_product}
+            </div>
+          ` : ''}
         </div>
       `).join('');
     }
 
-    // 실시간 검색
-    function handleSearch() {
-      const q = document.getElementById('searchInput').value.toLowerCase().trim();
-      const filtered = cachedItems.filter(item => 
-        (item.title && item.title.toLowerCase().includes(q)) ||
-        (item.category && item.category.toLowerCase().includes(q)) ||
-        (item.content && item.content.toLowerCase().includes(q))
-      );
-      renderItems(filtered);
-    }
-
-    // XSS 방지 유틸
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/[&<>"']/g, function(m) {
-        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-      });
-    }
-
-    // 엔터키 로그인 지원
-    document.getElementById('userPassword').addEventListener('keyup', function(e) {
-      if (e.key === 'Enter') loginPortal();
-    });
-
-    checkAuthSession();
+    checkAuth();
   </script>
 </body>
 </html>
