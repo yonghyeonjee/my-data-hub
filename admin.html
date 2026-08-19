@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>통합 Admin CMS 대시보드</title>
-  <!-- Supabase JS & SheetJS(엑셀 파싱 라이브러리) -->
+  <title>통합 Admin CMS · 데이터 & 매출 관리 시스템</title>
+  <!-- Supabase JS & SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #f8fafc; color: #1e293b; display: flex; height: 100vh; overflow: hidden; }
     .hidden { display: none !important; }
 
@@ -18,25 +19,29 @@
     .login-card input { width: 100%; padding: 12px; margin: 8px 0 16px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; }
     .login-card button { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
-    /* 레이아웃 구조 */
+    /* 전체 CMS 레이아웃 */
     #appLayout { display: flex; width: 100vw; height: 100vh; }
     
     /* 좌측 사이드바 */
     aside { width: 260px; background: #0f172a; color: #94a3b8; display: flex; flex-direction: column; flex-shrink: 0; }
-    .brand-logo { padding: 24px 20px; font-size: 18px; font-weight: 700; color: #ffffff; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 8px; }
+    .brand-logo { padding: 22px 20px; font-size: 17px; font-weight: 700; color: #ffffff; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 8px; }
     .nav-menu { list-style: none; padding: 16px 8px; flex: 1; overflow-y: auto; }
-    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 16px; margin-bottom: 4px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 14px; font-weight: 500; }
     .nav-item:hover { background: #1e293b; color: #f8fafc; }
     .nav-item.active { background: #2563eb; color: white; }
     .user-profile-bar { padding: 16px 20px; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
     .btn-logout { background: transparent; border: 1px solid #475569; color: #cbd5e1; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
 
-    /* 우측 메인 컨텐츠 영역 */
+    /* 우측 메인 영역 */
     main { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: #f8fafc; }
-    header { background: white; padding: 18px 32px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-    .content-body { padding: 32px; max-width: 1200px; }
+    header { background: white; padding: 16px 32px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+    .content-body { padding: 28px 32px; max-width: 1300px; }
 
-    /* 공통 카드 및 테이블 폼 UI */
+    /* 대시보드 탭 전용 풀사이즈 컨테이너 */
+    #tab-sales-dash { width: 100%; height: calc(100vh - 65px); padding: 0; }
+    .dash-iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    /* 일반 카드/폼 UI */
     .card { background: white; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
     .card h3 { margin-bottom: 16px; font-size: 16px; color: #0f172a; }
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; }
@@ -56,7 +61,7 @@
 </head>
 <body>
 
-  <!-- 관리자 로그인 화면 -->
+  <!-- 관리자 로그인 폼 -->
   <div id="loginOverlay">
     <div class="login-card">
       <h2 style="margin-bottom: 20px; text-align: center; color: #0f172a;">🔐 CMS 관리자 포털</h2>
@@ -71,13 +76,14 @@
     </div>
   </div>
 
-  <!-- 메인 CMS 레이아웃 -->
+  <!-- 메인 레이아웃 -->
   <div id="appLayout" class="hidden">
-    <!-- 좌측 사이드바 메뉴 -->
+    <!-- 좌측 메뉴 -->
     <aside>
       <div class="brand-logo">⚡ CORE ADMIN CMS</div>
       <ul class="nav-menu">
-        <li class="nav-item active" onclick="switchTab('tab-data', this)">📦 데이터 항목 관리</li>
+        <li class="nav-item active" onclick="switchTab('tab-sales-dash', this)">📈 온라인 매출 대시보드</li>
+        <li class="nav-item" onclick="switchTab('tab-data', this)">📦 데이터 항목 관리</li>
         <li class="nav-item" onclick="switchTab('tab-excel', this)">📊 엑셀 대량 업로드</li>
         <li class="nav-item" onclick="switchTab('tab-keys', this)">🔑 API Key 관리</li>
         <li class="nav-item" onclick="switchTab('tab-users', this)">👥 사용자 및 권한 관리</li>
@@ -91,114 +97,120 @@
       </div>
     </aside>
 
-    <!-- 우측 컨텐츠 화면 -->
+    <!-- 우측 화면 -->
     <main>
       <header>
-        <h2 id="pageTitle" style="font-size: 18px;">📦 데이터 항목 관리</h2>
-        <a href="index.html" target="_blank" class="btn btn-secondary" style="text-decoration: none; font-size: 13px;">대민 사이트 미리보기 ↗</a>
+        <h2 id="pageTitle" style="font-size: 17px; font-weight: 700;">📈 온라인 매출 대시보드</h2>
+        <div style="display: flex; gap: 8px;">
+          <a id="extDashBtn" href="https://script.google.com/macros/s/AKfycby2qM0GXf08SmQ46sRUEJEXV6LfS9_jppw8V68of8kElHMWCoHv-VzfLYVAAavv1AL4/exec" target="_blank" class="btn btn-secondary" style="text-decoration: none; font-size: 13px;">새 창으로 열기 ↗</a>
+          <a href="index.html" target="_blank" class="btn btn-secondary" style="text-decoration: none; font-size: 13px;">대민 사이트 ↗</a>
+        </div>
       </header>
 
-      <div class="content-body">
-        
-        <!-- 1. 데이터 CRUD 탭 -->
-        <section id="tab-data" class="tab-content">
-          <div class="card">
-            <h3>➕ 신규 데이터 개별 등록</h3>
-            <div class="form-grid">
-              <input type="text" id="inputCat" placeholder="카테고리 (예: 인프라, DB, API)">
-              <input type="text" id="inputTitle" placeholder="제목">
-            </div>
-            <textarea id="inputContent" rows="3" placeholder="상세 설명을 입력하세요..." style="margin-bottom: 12px;"></textarea>
-            <button class="btn btn-primary" onclick="createSingleItem()">데이터 저장</button>
-          </div>
+      <!-- 1. Google Apps Script 대시보드 탭 (Iframe) -->
+      <section id="tab-sales-dash" class="tab-content" style="height: calc(100vh - 65px);">
+        <iframe 
+          class="dash-iframe" 
+          src="https://script.google.com/macros/s/AKfycby2qM0GXf08SmQ46sRUEJEXV6LfS9_jppw8V68of8kElHMWCoHv-VzfLYVAAavv1AL4/exec"
+          title="온라인 매출 대시보드"
+          allow="clipboard-write">
+        </iframe>
+      </section>
 
-          <div class="card">
-            <h3>📋 등록된 데이터베이스 목록</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 15%;">카테고리</th>
-                  <th style="width: 35%;">제목</th>
-                  <th style="width: 35%;">등록일</th>
-                  <th style="width: 15%;">관리</th>
-                </tr>
-              </thead>
-              <tbody id="dataTableBody"></tbody>
-            </table>
+      <!-- 2. 데이터 CRUD 탭 -->
+      <section id="tab-data" class="tab-content hidden content-body">
+        <div class="card">
+          <h3>➕ 신규 데이터 개별 등록</h3>
+          <div class="form-grid">
+            <input type="text" id="inputCat" placeholder="카테고리 (예: 인프라, 채널, 광고비)">
+            <input type="text" id="inputTitle" placeholder="제목">
           </div>
-        </section>
+          <textarea id="inputContent" rows="3" placeholder="상세 설명을 입력하세요..." style="margin-bottom: 12px;"></textarea>
+          <button class="btn btn-primary" onclick="createSingleItem()">데이터 저장</button>
+        </div>
 
-        <!-- 2. 엑셀 업로드 탭 -->
-        <section id="tab-excel" class="tab-content hidden">
-          <div class="card">
-            <h3>📥 엑셀 파일 대량 일괄 등록 (.xlsx, .csv)</h3>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
-              * 엑셀 1행 헤더를 <b>category</b>, <b>title</b>, <b>content</b> 로 맞추어 업로드하면 일괄 Insert 됩니다.
-            </p>
-            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="margin-bottom: 16px;">
-            <button class="btn btn-primary" onclick="processExcelUpload()">엑셀 데이터 DB 업로드 실행</button>
-          </div>
-          <div id="excelPreviewCard" class="card hidden">
-            <h3>미리보기 (상위 5건)</h3>
-            <div id="excelPreview"></div>
-          </div>
-        </section>
+        <div class="card">
+          <h3>📋 등록된 데이터베이스 목록</h3>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 15%;">카테고리</th>
+                <th style="width: 35%;">제목</th>
+                <th style="width: 35%;">등록일</th>
+                <th style="width: 15%;">관리</th>
+              </tr>
+            </thead>
+            <tbody id="dataTableBody"></tbody>
+          </table>
+        </div>
+      </section>
 
-        <!-- 3. API Key 관리 탭 -->
-        <section id="tab-keys" class="tab-content hidden">
-          <div class="card">
-            <h3>🔑 시스템 연동용 API Key 생성</h3>
-            <div class="form-grid">
-              <input type="text" id="keyName" placeholder="Key 식별 이름 (예: 모바일 앱 연동용, 백오피스 API)">
-            </div>
-            <button class="btn btn-primary" onclick="generateApiKey()">신규 API Key 발급</button>
-          </div>
-          <div class="card">
-            <h3>발급된 API Key 목록</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>식별명</th>
-                  <th>API Key 값</th>
-                  <th>발급일자</th>
-                  <th>관리</th>
-                </tr>
-              </thead>
-              <tbody id="keysTableBody"></tbody>
-            </table>
-          </div>
-        </section>
+      <!-- 3. 엑셀 업로드 탭 -->
+      <section id="tab-excel" class="tab-content hidden content-body">
+        <div class="card">
+          <h3>📥 엑셀 파일 대량 일괄 등록 (.xlsx, .csv)</h3>
+          <p style="font-size: 13px; color: #64748b; margin-bottom: 16px;">
+            * 엑셀 1행 헤더를 <b>category</b>, <b>title</b>, <b>content</b> 로 맞추어 업로드하면 일괄 Insert 됩니다.
+          </p>
+          <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="margin-bottom: 16px;">
+          <button class="btn btn-primary" onclick="processExcelUpload()">엑셀 데이터 DB 업로드 실행</button>
+        </div>
+      </section>
 
-        <!-- 4. 권한 관리 탭 -->
-        <section id="tab-users" class="tab-content hidden">
-          <div class="card">
-            <h3>👥 사용자 계정 등록 (대민 로그인 허용용)</h3>
-            <div class="form-grid">
-              <input type="email" id="newMemberEmail" placeholder="사용자 이메일">
-              <input type="password" id="newMemberPassword" placeholder="초기 비밀번호">
-              <select id="newMemberRole">
-                <option value="user">일반 사용자 (대민 사이트 조회 권한)</option>
-                <option value="admin">관리자 (CMS 전체 접근 권한)</option>
-              </select>
-            </div>
-            <button class="btn btn-primary" onclick="createNewUserByAdmin()">계정 생성</button>
+      <!-- 4. API Key 관리 탭 -->
+      <section id="tab-keys" class="tab-content hidden content-body">
+        <div class="card">
+          <h3>🔑 시스템 연동용 API Key 생성</h3>
+          <div class="form-grid">
+            <input type="text" id="keyName" placeholder="Key 식별 이름 (예: 모바일 앱 연동용, 백오피스 API)">
           </div>
-          <div class="card">
-            <h3>전체 등록 계정 및 권한 목록</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>이메일</th>
-                  <th>현재 권한</th>
-                  <th>권한 변경</th>
-                </tr>
-              </thead>
-              <tbody id="usersTableBody"></tbody>
-            </table>
-          </div>
-        </section>
+          <button class="btn btn-primary" onclick="generateApiKey()">신규 API Key 발급</button>
+        </div>
+        <div class="card">
+          <h3>발급된 API Key 목록</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>식별명</th>
+                <th>API Key 값</th>
+                <th>발급일자</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="keysTableBody"></tbody>
+          </table>
+        </div>
+      </section>
 
-      </div>
+      <!-- 5. 권한 관리 탭 -->
+      <section id="tab-users" class="tab-content hidden content-body">
+        <div class="card">
+          <h3>👥 사용자 계정 등록 (대민 로그인 허용용)</h3>
+          <div class="form-grid">
+            <input type="email" id="newMemberEmail" placeholder="사용자 이메일">
+            <input type="password" id="newMemberPassword" placeholder="초기 비밀번호">
+            <select id="newMemberRole">
+              <option value="user">일반 사용자 (대민 사이트 조회 권한)</option>
+              <option value="admin">관리자 (CMS 전체 접근 권한)</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="createNewUserByAdmin()">계정 즉시 생성</button>
+        </div>
+        <div class="card">
+          <h3>전체 등록 계정 및 권한 목록</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>이메일</th>
+                <th>현재 권한</th>
+                <th>권한 변경</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
   </div>
 
@@ -217,7 +229,7 @@
         return;
       }
 
-      // 프로필 Role 체크
+      // Role 체크
       const { data: profile } = await supabaseClient
         .from('profiles')
         .select('role')
@@ -225,7 +237,7 @@
         .single();
 
       if (profile && profile.role !== 'admin') {
-        alert("관리자 권한이 없는 계정입니다. 대민 포털로 이동합니다.");
+        alert("관리자 권한이 없는 계정입니다.");
         await supabaseClient.auth.signOut();
         window.location.href = "index.html";
         return;
@@ -250,16 +262,18 @@
       checkAdminAuth();
     }
 
-    // 2. 탭 전환 UI
+    // 2. 탭 전환
     function switchTab(tabId, el) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      document.getElementById(tabId).classList.remove('hidden');
+      
+      const target = document.getElementById(tabId);
+      target.classList.remove('hidden');
       el.classList.add('active');
       document.getElementById('pageTitle').innerText = el.innerText;
     }
 
-    // 3. 데이터 CRUD
+    // 3. 데이터 항목 CRUD
     async function loadDataItems() {
       const { data } = await supabaseClient.from('items').select('*').order('created_at', { ascending: false });
       const tbody = document.getElementById('dataTableBody');
@@ -292,7 +306,7 @@
       loadDataItems();
     }
 
-    // 4. 엑셀 대량 업로드 로직 (SheetJS)
+    // 4. 엑셀 일괄 업로드
     async function processExcelUpload() {
       const fileInput = document.getElementById('excelFileInput');
       if (!fileInput.files.length) return alert("엑셀 파일을 선택하세요.");
@@ -307,15 +321,14 @@
 
         if (jsonData.length === 0) return alert("엑셀 내 데이터가 없습니다.");
 
-        // 일괄 Insert
         const { error } = await supabaseClient.from('items').insert(jsonData);
         if (error) {
-          alert("엑셀 업로드 실패 (컬럼명을 확인하세요: category, title, content): " + error.message);
+          alert("업로드 실패 (컬럼명 확인: category, title, content): " + error.message);
         } else {
-          alert(`총 ${jsonData.length}건의 데이터가 성공적으로 등록되었습니다.`);
+          alert(`총 ${jsonData.length}건이 성공적으로 등록되었습니다.`);
           fileInput.value = '';
           loadDataItems();
-          switchTab('tab-data', document.querySelectorAll('.nav-item')[0]);
+          switchTab('tab-data', document.querySelectorAll('.nav-item')[1]);
         }
       };
       reader.readAsArrayBuffer(file);
@@ -351,7 +364,7 @@
       loadApiKeys();
     }
 
-    // 6. 권한 관리 (사용자 목록 & Role 제어)
+    // 6. 권한 관리
     async function loadUsers() {
       const { data } = await supabaseClient.from('profiles').select('*');
       const tbody = document.getElementById('usersTableBody');
@@ -377,24 +390,28 @@
       const email = document.getElementById('newMemberEmail').value.trim();
       const password = document.getElementById('newMemberPassword').value;
       const role = document.getElementById('newMemberRole').value;
-    
       if (!email || !password) return alert("이메일과 비밀번호를 입력하세요.");
-    
-      // DB의 create_user_by_admin 함수 호출 (메일 전송 없이 즉시 생성)
+
+      // RPC 직접 생성 시도
       const { data, error } = await supabaseClient.rpc('create_user_by_admin', {
         new_email: email,
         new_password: password,
         new_role: role
       });
-    
+
       if (error || (data && !data.success)) {
-        alert("계정 생성 실패: " + (error ? error.message : data.error));
-      } else {
-        alert(`[${role.toUpperCase()}] 계정이 즉시 발급되었습니다!\nID: ${email}`);
-        document.getElementById('newMemberEmail').value = '';
-        document.getElementById('newMemberPassword').value = '';
-        loadUsers();
+        // RPC가 없거나 실패 시 fallback signUp
+        const { data: signUpData, error: signUpErr } = await supabaseClient.auth.signUp({ email, password });
+        if (signUpErr) return alert("계정 생성 실패: " + signUpErr.message);
+        if (signUpData.user) {
+          await supabaseClient.from('profiles').update({ role }).eq('id', signUpData.user.id);
+        }
       }
+
+      alert(`[${role.toUpperCase()}] 계정이 성공적으로 등록되었습니다.`);
+      document.getElementById('newMemberEmail').value = '';
+      document.getElementById('newMemberPassword').value = '';
+      loadUsers();
     }
 
     function loadAllData() {
