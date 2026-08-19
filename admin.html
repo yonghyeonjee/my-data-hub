@@ -377,14 +377,20 @@
       const email = document.getElementById('newMemberEmail').value.trim();
       const password = document.getElementById('newMemberPassword').value;
       const role = document.getElementById('newMemberRole').value;
+    
       if (!email || !password) return alert("이메일과 비밀번호를 입력하세요.");
-
-      const { data, error } = await supabaseClient.auth.signUp({ email, password });
-      if (error) return alert("생성 실패: " + error.message);
-
-      if (data.user) {
-        await supabaseClient.from('profiles').update({ role }).eq('id', data.user.id);
-        alert("계정이 성공적으로 생성되었습니다.");
+    
+      // DB의 create_user_by_admin 함수 호출 (메일 전송 없이 즉시 생성)
+      const { data, error } = await supabaseClient.rpc('create_user_by_admin', {
+        new_email: email,
+        new_password: password,
+        new_role: role
+      });
+    
+      if (error || (data && !data.success)) {
+        alert("계정 생성 실패: " + (error ? error.message : data.error));
+      } else {
+        alert(`[${role.toUpperCase()}] 계정이 즉시 발급되었습니다!\nID: ${email}`);
         document.getElementById('newMemberEmail').value = '';
         document.getElementById('newMemberPassword').value = '';
         loadUsers();
